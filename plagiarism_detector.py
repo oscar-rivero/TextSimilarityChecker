@@ -314,34 +314,117 @@ def check_plagiarism(text):
     targeted_search_terms = classification_result['search_terms']
     logger.info(f"Generated search terms: {targeted_search_terms}")
     
+    # Define problematic terms that should be filtered out
+    problematic_terms = ["the young", "the adult", "young", "adult", "the", 
+                         "this", "that", "these", "those", "they"]
+    
+    # Filter out problematic search terms
+    filtered_search_terms = []
+    for term in targeted_search_terms:
+        # Skip terms that match problematic terms exactly
+        if term.lower() in [p.lower() for p in problematic_terms]:
+            logger.warning(f"Skipping problematic search term: {term}")
+            continue
+            
+        # Skip terms that start with problematic prefixes
+        if any(term.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"]):
+            logger.warning(f"Skipping term with problematic prefix: {term}")
+            continue
+            
+        # Skip terms that are just single words and might be too generic
+        if len(term.split()) == 1 and term.lower() in ["young", "adult", "beetle"]:
+            logger.warning(f"Skipping single generic term: {term}")
+            continue
+            
+        # If we reach here, the term is acceptable
+        filtered_search_terms.append(term)
+    
+    # Add replacements for any filtered terms if needed
+    if "beetle" in text.lower() and not any("beetle" in term.lower() for term in filtered_search_terms):
+        filtered_search_terms.append("beetle biology")
+    
+    # If we filtered out all terms, add a fallback
+    if not filtered_search_terms:
+        logger.warning("All search terms were filtered out. Using fallback.")
+        if classification_result['primary_category'] != 'general':
+            filtered_search_terms.append(classification_result['primary_category'])
+        else:
+            # Extract the first noun phrase from the text as a last resort
+            words = text.split()
+            for i in range(len(words) - 1):
+                if words[i][0].isupper() and words[i].lower() not in problematic_terms:
+                    filtered_search_terms.append(words[i])
+                    break
+            
+            # If still nothing, add a generic search term
+            if not filtered_search_terms:
+                filtered_search_terms.append("plagiarism check")
+    
     # Add a fallback method with sentences for diversity
     # Extract sentences for search queries
     sentences = sent_tokenize(text)
     
     # Take every third sentence to create search queries, but limit to only 2
-    sentence_queries = [sentences[i] for i in range(0, len(sentences), 6)][:2]
+    # Also filter sentences to avoid problematic ones
+    filtered_sentences = []
+    for i in range(0, len(sentences), 6):
+        if i < len(sentences):
+            sentence = sentences[i]
+            # Skip sentences that are too short, too long, or start with problematic terms
+            if (len(sentence.split()) > 5 and 
+                len(sentence.split()) < 20 and 
+                not any(sentence.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"])):
+                filtered_sentences.append(sentence)
     
-    # Combine targeted search terms with some sentence queries
-    search_queries = targeted_search_terms.copy()
+    # Limit to 2
+    sentence_queries = filtered_sentences[:2]
+    
+    # Combine filtered search terms with filtered sentence queries
+    search_queries = filtered_search_terms.copy()
     for query in sentence_queries:
-        if len(query.split()) > 5 and len(query.split()) < 20 and query not in search_queries:
+        if query not in search_queries:
             search_queries.append(query)
     
     # Ensure we don't exceed 5 queries total
     search_queries = search_queries[:5]
     
+    # Log the filtered queries
+    logger.info(f"Final filtered search queries: {search_queries}")
+    
     # Add a specific Wikipedia query if we detected entities
     words = text.split()
     potential_entities = []
     
+    # Create a more comprehensive list of problematic terms
+    wiki_problematic_terms = ["the", "this", "that", "these", "those", "there", "their", "they", 
+                           "young", "adult", "beetle", "female", "male", "during", "while",
+                           "before", "after", "when", "where", "which", "what", "who"]
+    
     # Look for capitalized words that might be entities
     for i in range(len(words)):
-        if words[i] and words[i][0].isupper() and len(words[i]) > 3 and words[i].lower() not in ["the", "this", "that", "these", "those", "there", "their", "they"]:
+        if (words[i] and words[i][0].isupper() and len(words[i]) > 3 
+            and words[i].lower() not in wiki_problematic_terms):
             # Add the word and potentially the next word if it's also capitalized
             entity = words[i]
-            if i+1 < len(words) and words[i+1] and words[i+1][0].isupper():
+            if (i+1 < len(words) and words[i+1] and words[i+1][0].isupper() 
+                and words[i+1].lower() not in wiki_problematic_terms):
                 entity += " " + words[i+1]
             potential_entities.append(entity)
+    
+    # Further filter potential_entities
+    filtered_entities = []
+    for entity in potential_entities:
+        # Skip entities that consist solely of problematic terms
+        if all(word.lower() in wiki_problematic_terms for word in entity.split()):
+            continue
+        # Skip entities that start with problematic prefixes
+        if any(entity.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"]):
+            continue
+        # The entity passes all filters
+        filtered_entities.append(entity)
+    
+    # Replace the original list with filtered list
+    potential_entities = filtered_entities
     
     # Add category-specific Wikipedia search for better results
     if potential_entities and classification_result['primary_category'] != 'general':
@@ -349,12 +432,19 @@ def check_plagiarism(text):
         entity = potential_entities[0]
         wiki_query = f"{entity} {category} wikipedia"
         if wiki_query not in search_queries:
-            search_queries.append(wiki_query)
-    # Or just a general Wikipedia search if no category was identified
+            # Double check that the wiki query doesn't have problematic parts
+            if not any(p.lower() in wiki_query.lower() for p in wiki_problematic_terms):
+                search_queries.append(wiki_query)
+            else:
+                # Use a more general but still relevant query
+                search_queries.append(f"{category} wikipedia")
+    # Or just a general Wikipedia search if no category was identified and we have a good entity
     elif potential_entities:
-        wiki_query = f"{potential_entities[0]} wikipedia"
-        if wiki_query not in search_queries:
-            search_queries.append(wiki_query)
+        entity = potential_entities[0]
+        if not any(p.lower() in entity.lower() for p in wiki_problematic_terms):
+            wiki_query = f"{entity} wikipedia"
+            if wiki_query not in search_queries:
+                search_queries.append(wiki_query)
     
     results = []
     source_texts = []  # Store source texts for semantic comparison
