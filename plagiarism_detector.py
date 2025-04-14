@@ -509,6 +509,9 @@ def check_plagiarism(text):
                     
                     # Add to results if similarity is above threshold
                     if similarity > 0.1 or matches:
+                        # Find the best matching paragraph using cosine similarity
+                        best_paragraph_match = semantic_comparison.find_best_matching_paragraph(text, source_content)
+                            
                         results.append({
                             "source": {
                                 "title": result["title"],
@@ -518,7 +521,11 @@ def check_plagiarism(text):
                             "similarity": similarity_percent,
                             "matches": matches,
                             "semantic_matches": [],  # Will be filled later
-                            "source_content": source_content  # Store content for classification later
+                            "source_content": source_content,  # Store content for classification later
+                            "best_paragraph": {
+                                "content": best_paragraph_match['paragraph'],
+                                "similarity": best_paragraph_match['similarity'] * 100  # Convert to percentage like other similarity scores
+                            }
                         })
                 except ValueError as e:
                     logger.error(f"Value error processing source {source_url}: {str(e)}")

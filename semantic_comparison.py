@@ -10,6 +10,10 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from difflib import SequenceMatcher
 import string
+import re
+import math
+from collections import Counter
+from bs4 import BeautifulSoup
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -513,6 +517,141 @@ def compare_text_with_paragraphs(input_text, source_html_text, min_paragraph_len
         return {
             'overall_similarity': 0,
             'paragraph_matches': []
+        }
+
+def calculate_cosine_similarity(text1, text2):
+    """
+    Calculate cosine similarity between two texts.
+    
+    Parameters:
+    - text1: First text for comparison
+    - text2: Second text for comparison
+    
+    Returns:
+    - A float between 0 and 1 representing the cosine similarity
+    """
+    try:
+        # Preprocess texts
+        lemmas1 = lemmatize_text(text1)
+        lemmas2 = lemmatize_text(text2)
+        
+        # Create term frequency dictionaries
+        vector1 = Counter(lemmas1)
+        vector2 = Counter(lemmas2)
+        
+        # Calculate dot product
+        dot_product = sum(vector1[term] * vector2[term] for term in set(vector1).intersection(set(vector2)))
+        
+        # Calculate magnitudes
+        magnitude1 = math.sqrt(sum(value ** 2 for value in vector1.values()))
+        magnitude2 = math.sqrt(sum(value ** 2 for value in vector2.values()))
+        
+        # Avoid division by zero
+        if magnitude1 == 0 or magnitude2 == 0:
+            return 0
+        
+        # Return cosine similarity (dot product / product of magnitudes)
+        return dot_product / (magnitude1 * magnitude2)
+    
+    except Exception as e:
+        logger.error(f"Error calculating cosine similarity: {str(e)}")
+        return 0
+
+def extract_paragraphs_from_source(source_text, min_length=50):
+    """
+    Extract paragraphs from source text.
+    
+    Parameters:
+    - source_text: Text to extract paragraphs from
+    - min_length: Minimum character length for a valid paragraph
+    
+    Returns:
+    - List of extracted paragraphs
+    """
+    try:
+        # Try to extract paragraphs from HTML first
+        try:
+            # Use BeautifulSoup for more reliable HTML parsing
+            soup = BeautifulSoup(source_text, 'html.parser')
+            paragraphs = []
+            
+            # Extract all paragraphs
+            for p_tag in soup.find_all('p'):
+                p_text = p_tag.get_text(strip=True)
+                if p_text and len(p_text) >= min_length:
+                    paragraphs.append(p_text)
+            
+            # If we found paragraphs, return them
+            if paragraphs:
+                return paragraphs
+        except Exception as e:
+            logger.warning(f"Error extracting paragraphs from HTML: {str(e)}")
+        
+        # Fallback to text-based extraction
+        # Split on double newlines (common paragraph separator)
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', source_text)]
+        
+        # If we still don't have paragraphs, try single newlines
+        if not paragraphs or all(len(p) < min_length for p in paragraphs):
+            paragraphs = [p.strip() for p in re.split(r'\n', source_text)]
+        
+        # If we still don't have paragraphs, split on periods followed by spaces
+        if not paragraphs or all(len(p) < min_length for p in paragraphs):
+            paragraphs = [p.strip() + '.' for p in re.split(r'\.(?=\s)', source_text) if p.strip()]
+        
+        # Filter out too-short paragraphs
+        return [p for p in paragraphs if len(p) >= min_length]
+    
+    except Exception as e:
+        logger.error(f"Error extracting paragraphs: {str(e)}")
+        # Return the whole text as one paragraph as a fallback
+        return [source_text] if source_text and len(source_text) >= min_length else []
+
+def find_best_matching_paragraph(input_text, source_text):
+    """
+    Find the paragraph from the source text that best matches the input text,
+    evaluated with cosine similarity.
+    
+    Parameters:
+    - input_text: The text to check against source paragraphs
+    - source_text: The source text to extract paragraphs from
+    
+    Returns:
+    - Dictionary with the best matching paragraph and its similarity score
+    """
+    try:
+        # Extract paragraphs from source
+        paragraphs = extract_paragraphs_from_source(source_text)
+        
+        if not paragraphs:
+            return {
+                'paragraph': '',
+                'similarity': 0
+            }
+        
+        # Calculate cosine similarity for each paragraph
+        similarities = []
+        for paragraph in paragraphs:
+            similarity = calculate_cosine_similarity(input_text, paragraph)
+            similarities.append({
+                'paragraph': paragraph,
+                'similarity': similarity
+            })
+        
+        # Return the paragraph with the highest similarity
+        if similarities:
+            return max(similarities, key=lambda x: x['similarity'])
+        else:
+            return {
+                'paragraph': '',
+                'similarity': 0
+            }
+    
+    except Exception as e:
+        logger.error(f"Error finding best matching paragraph: {str(e)}")
+        return {
+            'paragraph': '',
+            'similarity': 0
         }
 
 def check_semantic_plagiarism(original_text, source_texts):
