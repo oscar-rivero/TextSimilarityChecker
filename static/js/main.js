@@ -178,7 +178,39 @@ function highlightMatches() {
     if (!matchesDataElem) return;
     
     try {
-        const matches = JSON.parse(matchesDataElem.value);
+        // Safely parse the JSON data, handling potential flattened array structure
+        let matchesValue = matchesDataElem.value;
+        let matches = [];
+        
+        try {
+            // Try to parse the direct value
+            matches = JSON.parse(matchesValue);
+            
+            // If matches is not an array but contains matches from multiple sources
+            if (!Array.isArray(matches)) {
+                // Try to extract matches from results structure
+                const resultsData = document.getElementById('similarity-data');
+                if (resultsData) {
+                    const results = JSON.parse(resultsData.value);
+                    matches = [];
+                    results.forEach(result => {
+                        if (result.matches && Array.isArray(result.matches)) {
+                            matches = matches.concat(result.matches);
+                        }
+                    });
+                }
+            }
+        } catch (parseError) {
+            console.warn('Could not parse matches data, using empty array:', parseError);
+            matches = [];
+        }
+        
+        // If we still don't have an array, return early
+        if (!Array.isArray(matches)) {
+            console.warn('Matches data is not an array, skipping highlighting');
+            return;
+        }
+        
         let originalText = originalTextContainer.textContent;
         
         // Create a map of matches to avoid overlapping highlights
@@ -186,15 +218,18 @@ function highlightMatches() {
         
         // Add each match to the map
         matches.forEach(match => {
-            const matchText = match.original;
-            const startIdx = originalText.indexOf(matchText);
-            
-            if (startIdx !== -1) {
-                const endIdx = startIdx + matchText.length;
+            // Make sure match has the expected structure
+            if (match && typeof match === 'object' && match.original) {
+                const matchText = match.original;
+                const startIdx = originalText.indexOf(matchText);
                 
-                // Store this match in our map
-                for (let i = startIdx; i < endIdx; i++) {
-                    highlightMap.set(i, true);
+                if (startIdx !== -1) {
+                    const endIdx = startIdx + matchText.length;
+                    
+                    // Store this match in our map
+                    for (let i = startIdx; i < endIdx; i++) {
+                        highlightMap.set(i, true);
+                    }
                 }
             }
         });
