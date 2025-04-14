@@ -21,32 +21,70 @@ except LookupError:
     nltk.download('stopwords')
     nltk.download('punkt')
 
-# Dictionary of categories with their associated keywords
+# Dictionary of categories with their associated keywords (enhanced with Wikipedia categories)
 CATEGORY_KEYWORDS = {
     "biology": [
+        # Core biology terms
         "species", "organism", "biology", "cell", "dna", "animal", "plant", "genus", 
         "ecosystem", "habitat", "microbiology", "evolution", "taxonomy", "bacteria", 
         "virus", "chromosome", "gene", "ecology", "conservation", "biodiversity",
         "specimen", "wildlife", "classification", "genetic", "organism", "ecology",
+        
+        # Insect and entomology specific
         "insect", "beetle", "larvae", "pest", "biological", "entomology", "arthropod",
         "exoskeleton", "invertebrate", "thorax", "abdomen", "metamorphosis", "pupa",
         "antennae", "lepidoptera", "coleoptera", "diptera", "hymenoptera", "hemiptera",
         "ovipositor", "mandible", "molt", "instar", "chrysalis", "nymph", "imago",
-        "arthropod", "leaf", "defoliation", "host plant", "egg", "wing", "consume"
+        "leaf", "defoliation", "host plant", "egg", "wing", "consume",
+        
+        # Wikipedia biology categories
+        "zoology", "botany", "biota", "flora", "fauna", "mycology", "ornithology", 
+        "ichthyology", "herpetology", "mammalogy", "phylogenetics", "molecular biology",
+        "systematics", "embryology", "morphology", "comparative anatomy", "physiology",
+        "photosynthesis", "respiration", "metabolism", "protein", "enzyme", "organelle",
+        "mitochondria", "chloroplast", "ribosome", "natural selection", "adaptation",
+        "reproductive", "pollination", "germination", "life cycle", "symbiosis",
+        "predator", "prey", "parasite", "host", "biome", "biomass", "population",
+        "community ecology", "food web", "food chain", "trophic level", "keystone species"
     ],
     "technology": [
+        # Core technology terms
         "algorithm", "computer", "software", "hardware", "programming", "code", 
         "database", "network", "server", "technology", "internet", "online", 
         "digital", "security", "privacy", "cyber", "application", "system",
         "device", "interface", "platform", "storage", "cloud", "protocol",
-        "mobile", "virtual", "encryption", "bandwidth", "processor", "authentication"
+        "mobile", "virtual", "encryption", "bandwidth", "processor", "authentication",
+        
+        # Wikipedia technology categories
+        "information technology", "computer science", "artificial intelligence", 
+        "machine learning", "robotics", "automation", "biotechnology", "nanotechnology", 
+        "telecommunications", "electronics", "computing", "engineering", "manufacturing",
+        "aerospace", "automotive", "industrial", "materials science", "nuclear technology", 
+        "renewable energy", "sustainable technology", "medical technology", "assistive technology",
+        "emerging technologies", "data science", "internet of things", "blockchain", 
+        "quantum computing", "augmented reality", "virtual reality", "3d printing",
+        "big data", "data mining", "cryptography", "devops", "agile", "waterfall",
+        "gpu", "cpu", "microcontroller", "firmware", "api", "sdk", "framework"
     ],
     "history": [
+        # Core history terms
         "history", "century", "ancient", "civilization", "empire", "king", "queen", 
         "revolution", "war", "era", "period", "dynasty", "archaeology", "historical", 
         "medieval", "renaissance", "artifact", "colonization", "prehistoric",
         "archive", "chronicle", "document", "heritage", "legacy", "monument",
-        "kingdom", "treaty", "conquest", "reign", "timeline"
+        "kingdom", "treaty", "conquest", "reign", "timeline",
+        
+        # Wikipedia history categories
+        "history by location", "history by period", "history by topic", "chronology", 
+        "historiography", "archaeological sites", "antiquity", "classical antiquity", 
+        "bronze age", "iron age", "middle ages", "early modern period", "modern history", 
+        "contemporary history", "world war", "cold war", "civil war", "military history",
+        "political history", "social history", "economic history", "cultural history",
+        "intellectual history", "maritime history", "art history", "history of science", 
+        "history of technology", "historical figures", "ancient rome", "ancient greece", 
+        "ancient egypt", "medieval europe", "byzantine empire", "ottoman empire",
+        "holy roman empire", "colonial america", "french revolution", "industrial revolution",
+        "ancient civilizations", "historical documents", "primary sources"
     ],
     "medicine": [
         "disease", "treatment", "symptom", "patient", "clinical", "medical", 
