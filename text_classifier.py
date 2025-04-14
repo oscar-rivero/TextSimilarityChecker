@@ -184,6 +184,7 @@ def classify_text(text):
     """
     Classify the input text based on its content and keywords.
     Returns a dictionary with the top 3 categories and their scores.
+    Filters out fixed categories that aren't sufficiently relevant to the content.
     """
     try:
         features = extract_features(text)
@@ -194,8 +195,37 @@ def classify_text(text):
         # Calculate category scores
         category_scores = _calculate_category_scores(word_freq, tokens, original_text)
         
-        # Get the top categories
-        top_categories = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
+        # Filter out fixed categories with low scores
+        # This prevents categories like "biology" from being assigned when they aren't truly relevant
+        filtered_category_scores = {}
+        for category, score in category_scores.items():
+            # Add a higher threshold for certain categories to prevent them from appearing 
+            # when they're not truly relevant
+            threshold = 2.0  # Default threshold
+            
+            # Specific thresholds for commonly over-assigned categories
+            if category in ["biology", "colors", "general"]:
+                threshold = 3.0
+            
+            if score >= threshold:
+                filtered_category_scores[category] = score
+        
+        # If we removed too many categories, restore the original scores
+        # This ensures we always have at least some categories to work with
+        if len(filtered_category_scores) < 2:
+            # Sort categories by score and take only those with meaningful scores
+            sorted_scores = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
+            meaningful_categories = [(cat, score) for cat, score in sorted_scores if score > 1.0]
+            
+            # Just use the top 3 categories if we need more
+            if len(meaningful_categories) > 1:
+                filtered_category_scores = {cat: score for cat, score in meaningful_categories[:3]}
+            else:
+                # If everything was filtered, use the original scores for top categories
+                filtered_category_scores = {cat: score for cat, score in sorted_scores[:3]}
+        
+        # Get the top categories from filtered scores
+        top_categories = sorted(filtered_category_scores.items(), key=lambda x: x[1], reverse=True)
         
         # Format and return the result
         if top_categories:
@@ -203,7 +233,7 @@ def classify_text(text):
                 "primary_category": top_categories[0][0],
                 "primary_score": top_categories[0][1],
                 "top_categories": [(cat, score) for cat, score in top_categories[:3]],
-                "all_scores": category_scores
+                "all_scores": filtered_category_scores  # Use the filtered scores
             }
             
             # Add specific search terms based on top category
@@ -235,13 +265,44 @@ def classify_source_text(source_text):
     """
     Classify a source text to determine if it matches the input text's domain.
     Uses the same algorithm as classify_text but optimized for source comparison.
+    Also applies filtering to remove irrelevant fixed categories.
     """
     try:
         features = extract_features(source_text)
         word_freq = features["word_freq"]
         tokens = features["tokens"]
         
-        return _calculate_category_scores(word_freq, tokens, source_text)
+        # Get initial category scores
+        category_scores = _calculate_category_scores(word_freq, tokens, source_text)
+        
+        # Apply similar filtering logic as in classify_text
+        filtered_category_scores = {}
+        for category, score in category_scores.items():
+            # Add a higher threshold for certain categories to prevent them from appearing 
+            # when they're not truly relevant
+            threshold = 2.0  # Default threshold
+            
+            # Specific thresholds for commonly over-assigned categories
+            if category in ["biology", "colors", "general"]:
+                threshold = 3.0
+            
+            if score >= threshold:
+                filtered_category_scores[category] = score
+        
+        # If we removed too many categories, restore some of the original scores
+        if len(filtered_category_scores) < 2:
+            # Sort categories by score and take only those with meaningful scores
+            sorted_scores = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
+            meaningful_categories = [(cat, score) for cat, score in sorted_scores if score > 1.0]
+            
+            # Use the top 3 categories if we need more
+            if len(meaningful_categories) > 1:
+                filtered_category_scores = {cat: score for cat, score in meaningful_categories[:3]}
+            else:
+                # If everything was filtered, use the original scores for top categories
+                filtered_category_scores = {cat: score for cat, score in sorted_scores[:3]}
+        
+        return filtered_category_scores
     except Exception as e:
         logger.error(f"Error in classify_source_text: {str(e)}")
         # Return a generic classification for error cases
@@ -258,10 +319,11 @@ def is_source_relevant(input_categories, source_categories, threshold=0.7, sourc
         source_url: Optional URL of the source, used for additional filtering
         
     Returns:
-        Boolean indicating if the source is relevant to the input text
+        Tuple of (is_relevant, relevance_score) where is_relevant is a boolean and
+        relevance_score is a float from 0-2.0 indicating the strength of the match
     """
-    # Get top two categories from input text
-    top_input_categories = sorted(input_categories.items(), key=lambda x: x[1], reverse=True)[:2]
+    # Get top three categories from input text
+    top_input_categories = sorted(input_categories.items(), key=lambda x: x[1], reverse=True)[:3]
     top_input_category_names = [cat[0] for cat in top_input_categories]
     
     # Check if source's top categories match input's top categories
@@ -271,20 +333,24 @@ def is_source_relevant(input_categories, source_categories, threshold=0.7, sourc
     # Calculate relevance score
     relevance_score = 0.0
     
-    # Most important: primary category must match (this ensures strong domain relevance)
+    # --- Category match scoring ---
+    
+    # Primary category match (highest weight)
     if source_top_category_names and top_input_category_names and source_top_category_names[0] == top_input_category_names[0]:
-        relevance_score += 0.7
+        relevance_score += 0.8
     elif not source_top_category_names or not top_input_category_names:
         # If we don't have categories, this is a problem
         logger.warning(f"Missing categories - Input: {top_input_category_names}, Source: {source_top_category_names}")
-        return False
+        return False, 0.0
+    
+    # --- Domain-specific filters ---
     
     # Special case for "Shades of green" and other color pages - explicitly reject them
     # This handles the issue with the example text about green beetles matching color pages
     if "colors" in source_top_category_names[:2] or any("color" in cat.lower() for cat in source_top_category_names[:2]):
         if "biology" in top_input_category_names:
             logger.info(f"Explicitly rejecting color-related source when input is about biology")
-            return False
+            return False, 0.0
             
     # Special detection for URL patterns that indicate color pages when the text is about biology
     if "biology" in top_input_category_names and source_url and (
@@ -294,12 +360,37 @@ def is_source_relevant(input_categories, source_categories, threshold=0.7, sourc
         "rgb_" in source_url.lower()
     ):
         logger.info(f"Explicitly rejecting URL with color-related patterns: {source_url}")
-        return False
+        return False, 0.0
     
-    # If any of the source's top 2 categories match input's top 2 categories
-    common_categories = set(source_top_category_names[:2]) & set(top_input_category_names)
+    # --- Calculate overlapping categories ---
+    
+    # If any of the source's top categories match input's top categories
+    common_categories = set(source_top_category_names) & set(top_input_category_names)
     if common_categories:
-        relevance_score += 0.3 * len(common_categories)
+        # More overlap = higher score
+        relevance_score += 0.2 * len(common_categories)
+    
+    # --- Special handling for specific domains ---
+    
+    # Special boosting for historical content
+    if "history" in top_input_category_names:
+        # Boost Wikipedia articles about history
+        if source_url and "wikipedia.org" in source_url.lower() and "history" in source_top_category_names:
+            relevance_score += 0.4
+            
+        # Boost historiography-related sources significantly
+        if source_url and (
+            "historiography" in source_url.lower() or 
+            "historical_writing" in source_url.lower() or
+            "history_of_" in source_url.lower()
+        ):
+            relevance_score += 0.5
+        
+        # Academic sources are valuable for historical content
+        if "education" in source_top_category_names or "literature" in source_top_category_names:
+            relevance_score += 0.3
+    
+    # --- Filtering out mismatches ---
     
     # If the source doesn't have the same primary category as the input, 
     # it needs strong secondary matches to be considered relevant
@@ -307,17 +398,32 @@ def is_source_relevant(input_categories, source_categories, threshold=0.7, sourc
         # Need at least one matching category in their top categories
         if not common_categories:
             logger.debug(f"Source primary category doesn't match and no common categories")
-            return False
+            return False, 0.0
     
     # Special handling for "general" category - don't allow very generic sources
     if source_top_category_names[0] == "general" and top_input_category_names[0] != "general":
         logger.debug(f"Rejecting generic source for specific input category")
-        return False
+        return False, 0.0
+    
+    # --- URL-based boosting ---
+    
+    # Boost Wikipedia sources (generally more reliable)
+    if source_url and "wikipedia.org" in source_url.lower():
+        relevance_score += 0.2
+        
+        # Extra boost for exact topic match in Wikipedia URL 
+        if top_input_category_names[0] in source_url.lower():
+            relevance_score += 0.3
+    
+    # Boost educational and academic sources
+    if source_url and (".edu" in source_url.lower() or "academic" in source_url.lower()):
+        relevance_score += 0.2
         
     logger.debug(f"Source relevance score: {relevance_score}, Input categories: {top_input_category_names}, "
                 f"Source categories: {source_top_category_names}")
     
-    return relevance_score >= threshold
+    # Return both the boolean result and the score for ranking purposes
+    return relevance_score >= threshold, relevance_score
 
 def _calculate_category_scores(word_freq, tokens, original_text):
     """Internal function to calculate category scores for a text"""
