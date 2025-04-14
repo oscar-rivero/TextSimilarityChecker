@@ -16,9 +16,11 @@ from web_scraper import get_website_text_content
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('corpora/stopwords')
+    nltk.data.find('tokenizers/punkt_tab')
 except LookupError:
     nltk.download('punkt')
     nltk.download('stopwords')
+    nltk.download('punkt_tab')
 
 logger = logging.getLogger(__name__)
 
