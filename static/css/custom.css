@@ -214,3 +214,33 @@
     color: #28a745;
     font-weight: 500;
 }
+
+/* Best Matching Paragraph */
+.best-paragraph-container {
+    background-color: #f8f9fa;
+    border-left: 3px solid #17a2b8;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.best-paragraph-container p {
+    font-style: italic;
+    margin-bottom: 0;
+    color: #495057;
+}
+
+/* High similarity paragraph */
+.best-paragraph-high {
+    border-left-color: #dc3545;
+}
+
+/* Medium similarity paragraph */
+.best-paragraph-medium {
+    border-left-color: #fd7e14;
+}
+
+/* Low similarity paragraph */
+.best-paragraph-low {
+    border-left-color: #17a2b8;
+}
