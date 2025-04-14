@@ -61,7 +61,32 @@ function createReportText(data) {
     reportText += "--------\n";
     reportText += "Sources Found: " + data.sources_count + "\n";
     reportText += "Average Similarity: " + parseFloat(data.average_similarity).toFixed(2) + "%\n";
-    reportText += "Total Matching Phrases: " + data.total_matches + "\n\n";
+    reportText += "Total Matching Phrases: " + data.total_matches + "\n";
+    
+    // Classification information
+    if (data.classification) {
+        reportText += "\nCLASSIFICATION:\n";
+        reportText += "---------------\n";
+        reportText += "Primary Category: " + data.classification.primary_category + "\n";
+        
+        if (data.classification.top_categories && data.classification.top_categories.length > 0) {
+            reportText += "Top Categories:\n";
+            data.classification.top_categories.forEach(category => {
+                if (Array.isArray(category) && category.length >= 2) {
+                    reportText += "  - " + category[0] + " (" + parseFloat(category[1]).toFixed(1) + ")\n";
+                }
+            });
+        }
+        
+        if (data.classification.search_terms && data.classification.search_terms.length > 0) {
+            reportText += "\nSearch Terms Used:\n";
+            data.classification.search_terms.forEach(term => {
+                reportText += "  - " + term + "\n";
+            });
+        }
+    }
+    
+    reportText += "\n";
     
     // Sources section
     reportText += "MATCHING SOURCES:\n";
@@ -73,6 +98,24 @@ function createReportText(data) {
         data.sources.forEach((source, index) => {
             reportText += (index + 1) + ". " + source.title + "\n";
             reportText += "   URL: " + source.url + "\n";
+            
+            // Add category information
+            if (source.category_tag) {
+                reportText += "   Category: " + source.category_tag + "\n";
+            }
+            
+            // Add relevance score information
+            if (source.relevance_score) {
+                const relevanceScore = parseInt(source.relevance_score);
+                let relevanceText = 'Low';
+                if (relevanceScore > 2000) relevanceText = 'Extremely High';
+                else if (relevanceScore > 1000) relevanceText = 'Very High';
+                else if (relevanceScore > 500) relevanceText = 'High';
+                else if (relevanceScore > 250) relevanceText = 'Medium';
+                
+                reportText += "   Relevance: " + relevanceText + "\n";
+            }
+            
             reportText += "   Similarity: " + parseFloat(source.similarity).toFixed(2) + "%\n";
             reportText += "   Matching Phrases: " + source.matches.length + "\n\n";
             
@@ -81,6 +124,18 @@ function createReportText(data) {
                 reportText += "   Matching Content:\n";
                 source.matches.forEach((match, mIndex) => {
                     reportText += "   - " + match.original + "\n";
+                });
+                reportText += "\n";
+            }
+            
+            // Add semantic matches if available
+            if (source.semantic_matches && source.semantic_matches.length > 0) {
+                reportText += "   Semantic Matches (Possible Paraphrasing):\n";
+                source.semantic_matches.forEach((match, mIndex) => {
+                    if (Array.isArray(match) && match.length >= 2) {
+                        reportText += "   - Original: " + match[0] + "\n";
+                        reportText += "     Similar to: " + match[1] + "\n";
+                    }
                 });
                 reportText += "\n";
             }
@@ -126,9 +181,15 @@ function initializeCharts() {
             if (!item || !item.source) {
                 return 'Unknown Source';
             }
+            // Get category tag if available
+            const categoryTag = item.category_tag ? `[${item.category_tag}] ` : '';
+            
             // Truncate long titles
             let title = item.source.title || 'Unnamed Source';
-            return title.length > 30 ? title.substring(0, 27) + '...' : title;
+            title = title.length > 25 ? title.substring(0, 22) + '...' : title;
+            
+            // Combine category and title
+            return categoryTag + title;
         });
         
         const values = data.map(item => {
@@ -137,10 +198,22 @@ function initializeCharts() {
         });
         
         const backgroundColors = data.map(item => {
+            // Use relevance score if available for better color indication
+            if (item.relevance_score && item.relevance_score > 2000) {
+                return '#dc3545'; // Critical match - red
+            }
+            if (item.relevance_score && item.relevance_score > 1000) {
+                return '#9c27b0'; // Very high relevance - purple
+            }
+            if (item.relevance_score && item.relevance_score > 500) {
+                return '#fd7e14'; // High relevance - orange
+            }
+            
+            // Fallback to similarity-based colors
             const similarity = parseFloat(item.similarity) || 0;
-            if (similarity > 50) return '#dc3545'; // high
-            if (similarity > 30) return '#fd7e14'; // medium
-            return '#28a745'; // low
+            if (similarity > 50) return '#dc3545'; // high - red
+            if (similarity > 30) return '#fd7e14'; // medium - orange
+            return '#28a745'; // low - green
         });
         
         // Create the chart
@@ -190,7 +263,45 @@ function initializeCharts() {
                             },
                             afterTitle: function(tooltipItems) {
                                 const index = tooltipItems[0].dataIndex;
-                                return data[index].source.url || '';
+                                const url = data[index].source.url || '';
+                                
+                                // Add category tag if available
+                                let category = '';
+                                if (data[index].category_tag) {
+                                    category = `\nCategory: ${data[index].category_tag}`;
+                                }
+                                
+                                // Add relevance score if available
+                                let relevance = '';
+                                if (data[index].relevance_score) {
+                                    const relevanceScore = parseInt(data[index].relevance_score);
+                                    let relevanceText = 'Low';
+                                    if (relevanceScore > 2000) relevanceText = 'Extremely High';
+                                    else if (relevanceScore > 1000) relevanceText = 'Very High';
+                                    else if (relevanceScore > 500) relevanceText = 'High';
+                                    else if (relevanceScore > 250) relevanceText = 'Medium';
+                                    
+                                    relevance = `\nRelevance: ${relevanceText}`;
+                                }
+                                
+                                return url + category + relevance;
+                            },
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '%';
+                                }
+                                
+                                // Add match count if available
+                                const index = context.dataIndex;
+                                if (data[index].matches && data[index].matches.length) {
+                                    label += ` (${data[index].matches.length} matches)`;
+                                }
+                                
+                                return label;
                             }
                         }
                     }

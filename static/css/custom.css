@@ -42,6 +42,62 @@
     transform: translateY(-2px);
 }
 
+/* Border styles for cards with specific relevance scores */
+.results-card.border-success {
+    border-color: #28a745 !important;
+}
+
+.results-card.border-primary {
+    border-color: #007bff !important;
+}
+
+.results-card.border-info {
+    border-color: #17a2b8 !important;
+}
+
+.results-card.border-2 {
+    border-width: 3px !important;
+}
+
+/* Category tag styling */
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+}
+
+/* Wikipedia category special styling */
+.badge.wikipedia-tag {
+    background-color: #28a745 !important;
+}
+
+/* Relevance indicators */
+.card-header .badge.bg-success {
+    background-color: #28a745 !important;
+    padding: 0.35em 0.65em;
+    font-size: 0.85em;
+}
+
+.card-header .badge.bg-danger {
+    background-color: #dc3545 !important;
+    padding: 0.35em 0.65em;
+    font-size: 0.85em;
+    animation: pulse 2s infinite;
+}
+
+.card-header .badge.bg-primary {
+    background-color: #007bff !important;
+    padding: 0.35em 0.65em;
+    font-size: 0.85em;
+}
+
+/* Pulse animation for critical matches */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
 /* Footer styling */
 .footer {
     padding: 1.5rem 0;
