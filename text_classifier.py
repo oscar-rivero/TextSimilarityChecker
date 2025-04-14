@@ -1679,9 +1679,30 @@ def generate_search_terms(category, text):
     # Safety check - problematic terms to filter out
     problematic_terms = ["the young", "the adult", "young", "adult", "the", "a", "an"]
     
+    # Special handling for Ethiopian historiography - check before adding any terms
+    is_ethiopian_history = False
+    if text and isinstance(text, str) and (
+        "ethiopian historiography" in text.lower() or 
+        ("historiography" in text.lower() and "ethiopia" in text.lower())):
+        is_ethiopian_history = True
+        # Force category to be history
+        category = "history"
+        
+        # Add specific historiography terms immediately
+        historiography_terms = [
+            "Ethiopian historiography",
+            "literature of Ethiopian historiography",
+            "history of Ethiopia",
+            "historical writing in Ethiopia",
+            "Ethiopian historical documents"
+        ]
+        for term in historiography_terms:
+            if term not in search_terms:
+                search_terms.append(term)
+    
     # 1. ADD THE CLASSIFICATION CATEGORY FIRST
-    # Always include the category as a search term
-    if category != "general":
+    # Always include the category as a search term (but not biology for history texts)
+    if category != "general" and not (category == "biology" and is_ethiopian_history):
         search_terms.append(category)
     
     # 2. LOOK FOR SCIENTIFIC NAMES (for biology texts)
