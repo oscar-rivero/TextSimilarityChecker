@@ -166,30 +166,45 @@ def check_plagiarism(text):
                     "snippet": result["snippet"]
                 })
                 
-                # Process source content
-                processed_source = preprocess_text(source_content)
+                # Skip empty content
+                if not source_content or len(source_content.strip()) < 50:
+                    logger.warning(f"Source content too short or empty from {source_url}")
+                    continue
                 
-                # Calculate similarity
-                similarity = calculate_similarity(processed_text, processed_source)
-                
-                # Convert similarity to percentage (0-100 scale instead of 0-1)
-                similarity_percent = similarity * 100
-                
-                # Find matching phrases
-                matches = find_matching_phrases(text, source_content)
-                
-                # Add to results if similarity is above threshold
-                if similarity > 0.1 or matches:
-                    results.append({
-                        "source": {
-                            "title": result["title"],
-                            "url": source_url,
-                            "snippet": result["snippet"]
-                        },
-                        "similarity": similarity_percent,
-                        "matches": matches,
-                        "semantic_matches": []  # Will be filled later
-                    })
+                try:
+                    # Process source content
+                    processed_source = preprocess_text(source_content)
+                    
+                    # Calculate similarity
+                    similarity = calculate_similarity(processed_text, processed_source)
+                    
+                    # Convert similarity to percentage (0-100 scale instead of 0-1)
+                    similarity_percent = similarity * 100
+                    
+                    # Find matching phrases
+                    matches = find_matching_phrases(text, source_content)
+                    
+                    # Add to results if similarity is above threshold
+                    if similarity > 0.1 or matches:
+                        results.append({
+                            "source": {
+                                "title": result["title"],
+                                "url": source_url,
+                                "snippet": result["snippet"]
+                            },
+                            "similarity": similarity_percent,
+                            "matches": matches,
+                            "semantic_matches": []  # Will be filled later
+                        })
+                except ValueError as e:
+                    logger.error(f"Value error processing source {source_url}: {str(e)}")
+                    continue
+                except TypeError as e:
+                    logger.error(f"Type error processing source {source_url}: {str(e)}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Error processing source {source_url}: {str(e)}")
+                    continue
             except Exception as e:
                 logger.error(f"Error processing source {result.get('link', 'unknown')}: {str(e)}")
     
