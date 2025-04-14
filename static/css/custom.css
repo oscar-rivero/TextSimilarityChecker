@@ -68,10 +68,12 @@
 
 /* Source category styling - different colors for different categories */
 .badge.category-tag {
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.03em;
     padding: 0.35em 0.65em;
     margin-right: 0.25rem;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Wikipedia category special styling */

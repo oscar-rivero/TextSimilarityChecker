@@ -148,20 +148,31 @@
                     {% for result in results %}
                         <div class="card results-card mb-3 {% if result.relevance_score > 1000 %}border-success border-2{% elif result.relevance_score > 500 %}border-primary{% elif result.relevance_score > 250 %}border-info{% endif %}">
                             <div class="card-header">
-                                {% if result.relevance_score > 1000 %}
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-success me-2">
-                                            <i class="fas fa-check-circle"></i> Highly Relevant
-                                        </span>
-                                        {% if result.relevance_score > 2000 %}
-                                            <span class="badge bg-danger me-2">
-                                                <i class="fas fa-exclamation-triangle"></i> Exact Match
-                                            </span>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if result.relevance_score > 1000 %}
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-success me-2">
+                                                    <i class="fas fa-check-circle"></i> Highly Relevant
+                                                </span>
+                                                {% if result.relevance_score > 2000 %}
+                                                    <span class="badge bg-danger me-2">
+                                                        <i class="fas fa-exclamation-triangle"></i> Exact Match
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        {% elif result.relevance_score > 500 %}
+                                            <span class="badge bg-primary">Relevant</span>
                                         {% endif %}
                                     </div>
-                                {% elif result.relevance_score > 500 %}
-                                    <span class="badge bg-primary">Relevant</span>
-                                {% endif %}
+                                    
+                                    <!-- Category Tag - Prominent Display -->
+                                    {% if result.category_tag %}
+                                        <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
+                                            {{ result.category_tag }}
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -172,9 +183,6 @@
                                                 <i class="fas fa-external-link-alt ms-1 small"></i>
                                             </a>
                                         </h3>
-                                        {% if result.category_tag %}
-                                            <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white mt-1">{{ result.category_tag }}</span>
-                                        {% endif %}
                                     </div>
                                     <span class="badge {% if result.similarity > 50 %}similarity-high{% elif result.similarity > 30 %}similarity-medium{% else %}similarity-low{% endif %} similarity-badge">
                                         {{ result.similarity|floatformat:2 }}% Similar
