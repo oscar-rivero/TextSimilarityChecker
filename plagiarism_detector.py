@@ -144,19 +144,9 @@ def search_online(query, num_results=5):
         # Initialize special_results if not already defined
         special_results = []
         
-        # Ensure we have the Wikipedia source for Gratiana boliviana if relevant
-        if "Gratiana boliviana" in query or "gratiana boliviana" in query.lower():
-            special_results = [
-                {
-                    "title": "Gratiana boliviana - Wikipedia",
-                    "link": "https://en.wikipedia.org/wiki/Gratiana_boliviana",
-                    "snippet": "Gratiana boliviana is a species of tortoise beetle. It is used as a biological control agent against tropical soda apple."
-                }
-            ]
+        # No special handling for specific queries
         
-        # Return special results if available, or error message
-        if special_results:
-            return special_results
+        # Return generic error message
         return [{"title": "Search Error", "link": "#", "snippet": f"Error: {str(e)}"}]
 
 def preprocess_text(text):
@@ -309,7 +299,7 @@ def check_plagiarism(text):
             continue
             
         # Skip terms that are just single words and might be too generic
-        if len(term.split()) == 1 and term.lower() in ["young", "adult", "beetle"]:
+        if len(term.split()) == 1 and term.lower() in ["young", "adult"]:
             logger.warning(f"Skipping single generic term: {term}")
             continue
             
@@ -397,7 +387,7 @@ def check_plagiarism(text):
     
     # Create a more comprehensive list of problematic terms
     wiki_problematic_terms = ["the", "this", "that", "these", "those", "there", "their", "they", 
-                           "young", "adult", "beetle", "female", "male", "during", "while",
+                           "young", "adult", "female", "male", "during", "while",
                            "before", "after", "when", "where", "which", "what", "who"]
     
     # Look for capitalized words that might be entities
