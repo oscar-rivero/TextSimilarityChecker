@@ -1092,6 +1092,12 @@ def extract_key_phrases(text):
     Extract key phrases using POS tagging to identify linguistically meaningful structures.
     Extracts all terms in VERB, NOUN, ADVERB, ADJECTIVE categories without stopwords,
     and forms search terms as NOUN PHRASES according to grammar rules.
+    
+    Features:
+    - Handles complex multi-word noun phrases with nesting
+    - Supports recursive noun phrase structures
+    - Captures compound nouns, noun-noun relationships
+    - Properly extracts complete phrases like "internal sex organs"
     """
     # Clean the text first - remove punctuation 
     clean_text = re.sub(r'[^\w\s-]', ' ', text)
@@ -1115,41 +1121,103 @@ def extract_key_phrases(text):
     # Store all NOUN PHRASES we extract
     noun_phrases = []
     
-    # Extract complete noun phrases according to grammar rules
-    i = 0
-    while i < len(tagged):
-        # Start a new noun phrase
-        np_tokens = []
+    # IMPROVED GRAMMAR: Complex, recursive noun phrase extraction
+    # This implementation builds complete noun phrases with proper multi-word structure
+    
+    def extract_complex_np(start_idx):
+        """
+        Recursively extract a complete noun phrase starting at the given index.
+        Returns (phrase_tokens, end_idx, has_noun) tuple.
+        """
+        i = start_idx
+        phrase_tokens = []
         has_noun = False
-        start_idx = i
         
-        # Find determiner (optional)
-        det = None
+        # Find determiner (optional) - like "the", "a", "an", "this"
         if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
-            det = tagged[i][0]
+            # Skip the determiner in the final phrase
             i += 1
         
-        # Find adjectives (optional)
-        while i < len(tagged) and tagged[i][1].startswith('JJ'):
-            if tagged[i][0].lower() not in stop_words:
-                np_tokens.append(tagged[i][0])
-            i += 1
+        # Extract complex adjective phrases (adj + optional adverbs)
+        adj_start = i
+        while i < len(tagged):
+            # Adverbs modifying adjectives (e.g., "very large")
+            if tagged[i][1].startswith('RB'):
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                i += 1
+            # Adjectives
+            elif tagged[i][1].startswith('JJ'):
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                i += 1
+            else:
+                break
         
-        # Find nouns (required for a noun phrase)
-        while i < len(tagged) and tagged[i][1].startswith('NN'):
-            has_noun = True
-            if tagged[i][0].lower() not in stop_words:
-                np_tokens.append(tagged[i][0])
+        # Extract the noun head and any compound nouns
+        noun_start = i
+        while i < len(tagged):
+            # Nouns (singular, plural, proper)
+            if tagged[i][1].startswith('NN'):
+                has_noun = True
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                i += 1
+                
+                # Look ahead for compound nouns or noun sequences
+                # This ensures we capture things like "sex organs" as a complete unit
+                compound_i = i
+                compound_tokens = []
+                
+                while compound_i < len(tagged) and tagged[compound_i][1].startswith('NN'):
+                    if tagged[compound_i][0].lower() not in stop_words:
+                        compound_tokens.append(tagged[compound_i][0])
+                    compound_i += 1
+                
+                # If found compound nouns, add them and update position
+                if compound_tokens:
+                    phrase_tokens.extend(compound_tokens)
+                    i = compound_i
+            else:
+                break
+        
+        # Look for prepositional phrase attachments (recursively)
+        # This handles phrases like "anatomy of birds" or "structure of the cell membrane"
+        if i < len(tagged) and tagged[i][1] == 'IN':
+            prep = tagged[i][0]
             i += 1
             
-        # Check if we found a valid noun phrase
+            # Skip determiners after preposition
+            if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
+                i += 1
+            
+            # Recursively extract the noun phrase after the preposition
+            pp_tokens, new_i, pp_has_noun = extract_complex_np(i)
+            
+            # Only attach prep phrase if it contains a noun
+            if pp_has_noun and pp_tokens:
+                phrase_tokens.append(prep)
+                phrase_tokens.extend(pp_tokens)
+                i = new_i
+        
+        return phrase_tokens, i, has_noun
+    
+    # Extract complex noun phrases from the text
+    i = 0
+    while i < len(tagged):
+        # Try to extract a complex noun phrase starting at position i
+        np_tokens, new_i, has_noun = extract_complex_np(i)
+        
+        # If we found a valid noun phrase, add it
         if has_noun and np_tokens:
             phrase = " ".join(np_tokens)
             if phrase not in noun_phrases and len(phrase) > 2:
                 noun_phrases.append(phrase)
         
-        # If we didn't advance, move forward
-        if i == start_idx:
+        # Ensure we always make progress
+        if new_i > i:
+            i = new_i
+        else:
             i += 1
     
     # Extract verb phrases (verb + noun combinations)
