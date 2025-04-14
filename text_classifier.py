@@ -177,7 +177,109 @@ def classify_text(text):
         tokens = features["tokens"]
         original_text = text  # Keep original for pattern matching
         
-        # Calculate scores for each category
+        # Calculate category scores
+        category_scores = _calculate_category_scores(word_freq, tokens, original_text)
+        
+        # Get the top categories
+        top_categories = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # Format and return the result
+        if top_categories:
+            result = {
+                "primary_category": top_categories[0][0],
+                "primary_score": top_categories[0][1],
+                "top_categories": [(cat, score) for cat, score in top_categories[:3]],
+                "all_scores": category_scores
+            }
+            
+            # Add specific search terms based on top category
+            result["search_terms"] = generate_search_terms(result["primary_category"], text)
+            
+            return result
+        else:
+            # Fallback if no categories were found
+            return {
+                "primary_category": "general",
+                "primary_score": 1.0,
+                "top_categories": [("general", 1.0), ("academic", 0.5), ("information", 0.3)],
+                "all_scores": {"general": 1.0, "academic": 0.5, "information": 0.3},
+                "search_terms": []
+            }
+            
+    except Exception as e:
+        logger.error(f"Error in classify_text: {str(e)}")
+        # Default to a general category if classification fails
+        return {
+            "primary_category": "general",
+            "primary_score": 1.0,
+            "top_categories": [("general", 1.0), ("academic", 0.5), ("information", 0.3)],
+            "all_scores": {"general": 1.0, "academic": 0.5, "information": 0.3},
+            "search_terms": []
+        }
+
+def classify_source_text(source_text):
+    """
+    Classify a source text to determine if it matches the input text's domain.
+    Uses the same algorithm as classify_text but optimized for source comparison.
+    """
+    try:
+        features = extract_features(source_text)
+        word_freq = features["word_freq"]
+        tokens = features["tokens"]
+        
+        return _calculate_category_scores(word_freq, tokens, source_text)
+    except Exception as e:
+        logger.error(f"Error in classify_source_text: {str(e)}")
+        # Return a generic classification for error cases
+        return {"general": 1.0, "academic": 0.5, "information": 0.3}
+
+def is_source_relevant(input_categories, source_categories, threshold=0.4):
+    """
+    Determine if a source is relevant based on category matching.
+    
+    Args:
+        input_categories: Dictionary of categories and scores for the input text
+        source_categories: Dictionary of categories and scores for the source text
+        threshold: Minimum relevance score to consider the source relevant
+        
+    Returns:
+        Boolean indicating if the source is relevant to the input text
+    """
+    # Get top two categories from input text
+    top_input_categories = sorted(input_categories.items(), key=lambda x: x[1], reverse=True)[:2]
+    top_input_category_names = [cat[0] for cat in top_input_categories]
+    
+    # Check if source's top categories match input's top categories
+    source_top_categories = sorted(source_categories.items(), key=lambda x: x[1], reverse=True)[:3]
+    source_top_category_names = [cat[0] for cat in source_top_categories]
+    
+    # Calculate relevance score
+    relevance_score = 0.0
+    
+    # If the top category matches, high relevance
+    if source_top_category_names[0] in top_input_category_names:
+        relevance_score += 0.7
+    
+    # If any of the top 3 source categories match input's top 2 categories
+    for cat in source_top_category_names:
+        if cat in top_input_category_names:
+            relevance_score += 0.3
+            break
+    
+    # Consider keyword overlap for additional relevance
+    shared_keywords = sum(min(input_categories.get(cat, 0), source_categories.get(cat, 0)) 
+                         for cat in set(input_categories) & set(source_categories))
+    relevance_score += shared_keywords * 0.1
+    
+    logger.debug(f"Source relevance score: {relevance_score}, Input categories: {top_input_category_names}, "
+                f"Source categories: {source_top_category_names}")
+    
+    return relevance_score >= threshold
+
+def _calculate_category_scores(word_freq, tokens, original_text):
+    """Internal function to calculate category scores for a text"""
+    try:
+        # Initialize category scores
         category_scores = {}
         
         # First check for specific patterns that strongly indicate a particular category
@@ -236,27 +338,12 @@ def classify_text(text):
         top_categories = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
         
         # Return the top 3 categories and their scores
-        result = {
-            "primary_category": top_categories[0][0],
-            "primary_score": top_categories[0][1],
-            "top_categories": [(cat, score) for cat, score in top_categories[:3]],
-            "all_scores": category_scores
-        }
-        
-        # Add specific search terms based on top category
-        result["search_terms"] = generate_search_terms(result["primary_category"], text)
-        
-        return result
+        return category_scores
         
     except Exception as e:
-        logger.error(f"Error classifying text: {str(e)}")
-        # Return generic classification if there's an error
-        return {
-            "primary_category": "general",
-            "primary_score": 0,
-            "top_categories": [("general", 0)],
-            "search_terms": []
-        }
+        logger.error(f"Error in _calculate_category_scores: {str(e)}")
+        # Return generic categories if there's an error
+        return {"general": 1.0, "academic": 0.5}
 
 # Dictionary of important domain-specific terms for each category
 DOMAIN_SPECIFIC_TERMS = {
