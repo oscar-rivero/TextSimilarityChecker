@@ -1,0 +1,580 @@
+{
+  "search_metadata": {
+    "id": "67fd76dac32c23ba08605df6",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/b6009e2d83c7dca0/67fd76dac32c23ba08605df6.json",
+    "created_at": "2025-04-14 20:58:02 UTC",
+    "processed_at": "2025-04-14 20:58:02 UTC",
+    "google_url": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&oq=python+plagiarism+detection+algorithm&hl=en&gl=us&num=10&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/b6009e2d83c7dca0/67fd76dac32c23ba08605df6.html",
+    "total_time_taken": 1.33
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "python plagiarism detection algorithm",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us",
+    "num": "10",
+    "device": "desktop"
+  },
+  "search_information": {
+    "query_displayed": "python plagiarism detection algorithm",
+    "total_results": 192000,
+    "time_taken_displayed": 0.38,
+    "organic_results_state": "Results for exact spelling"
+  },
+  "knowledge_graph": {
+    "entity_type": "related_questions"
+  },
+  "inline_images": [
+    {
+      "source": "https://hasanaboulhasan.medium.com/advanced-plagiarism-detector-using-python-and-ai-4-methods-2e8a4e0b0243",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDYRqLy47Fnl1IlEt52ZLx85y0qUCOr6Tt-6mVgRSXF0was4eQovoRx5g&s",
+      "original": "https://miro.medium.com/v2/resize:fit:400/1*NrVAfevl2VMHJOIe5OwXgA.png",
+      "title": "Advanced Plagiarism Detector Using Python and AI [4 Methods ...",
+      "source_name": "Hasan Aboul Hasan - Medium"
+    },
+    {
+      "source": "https://www.codegrade.com/blog/how-to-check-for-plagiarism-in-python-source-code-2",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFeUf5T1PF5fYHY9eby6pOnQWQp_B6gfmgm0mV-gWZ5xCwlED0mz7VAmY&s",
+      "original": "https://cdn.prod.website-files.com/5e83abddf847f46973667198/65d75d9369b674189aec33fd_Code%20Plagerism%20detector.png",
+      "title": "How to Check for Plagiarism in Python Source Code ...",
+      "source_name": "CodeGrade"
+    },
+    {
+      "source": "https://www.youtube.com/watch?v=bqiSwMeFTAc",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuOW-XhUWNMAwpfoZiUoUx9eROdN6_3GOJTMTG7-cMjSkACCmIRKLsbIs&s",
+      "original": "https://i.ytimg.com/vi/bqiSwMeFTAc/maxresdefault.jpg",
+      "title": "Plagiarism Detection using String search algorithms",
+      "source_name": "YouTube"
+    },
+    {
+      "source": "https://github.com/blingenf/copydetect",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTINZWpzsgP7m5QIJwskkn-u77WYD9Jl1Oe610Wb48lyg9whbLqeOsL_1w&s",
+      "original": "https://raw.githubusercontent.com/blingenf/copydetect/master/docs/_static/report_screenshot1.png",
+      "title": "GitHub - blingenf/copydetect: Code plagiarism detection tool",
+      "source_name": "GitHub"
+    },
+    {
+      "source": "https://www.codegrade.com/blog/how-to-check-for-plagiarism-in-python-source-code-2",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxiZdxjwucjbz2Jb9ZoH99kfzYKMDTtCDOySFDQi0WgO1ReclcXbtUbs8&s",
+      "original": "https://cdn.prod.website-files.com/5e83abddf847f46973667198/65d76080bf8b8d1421616eed_Python%20and%20Academic%20Integrity%20.jpg",
+      "title": "How to Check for Plagiarism in Python Source Code ...",
+      "source_name": "CodeGrade"
+    },
+    {
+      "source": "https://www.youtube.com/watch?v=84IVS6eLC3s",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_u39bfRqwQQx2oMdLXEQO0Y9BUqQs1YHpE-6GC9RvnuxEORXD7r1Nxn0&s",
+      "original": "https://i.ytimg.com/vi/84IVS6eLC3s/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCNBUQRkhjVrTrR8AtwlTEbkINbMg",
+      "title": "Build your own GPTZero and Turnitin like App: AI Plagiarism Detector Tool",
+      "source_name": "YouTube"
+    },
+    {
+      "source": "https://www.youtube.com/watch?v=jO1g8WA0FWg",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvbMCH6gDgVKQm1M2XkSa7ehWOlijHt0GjgFM5WUTIIF0U6P0pD3u2Ass&s",
+      "original": "https://i.ytimg.com/vi/jO1g8WA0FWg/maxresdefault.jpg",
+      "title": "Plagiarism Checker - Free Plagiarism Checker - Instant Plagiarism Scan  Python",
+      "source_name": "YouTube"
+    },
+    {
+      "source": "https://www.patdel.com/plagiarism-detector/",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-RLd1Xb8vEcXV5MrHXZc_4rKpp3tnIvHcbutNAmlX6exqPmu2JNNucH4&s",
+      "original": "https://www.patdel.com/assets/images/20220903/FaNsr1aXkAY7t3t.png",
+      "title": "Building a Simple Plagiarism Detector \u2013 Patrick Delaney",
+      "source_name": "Patrick Delaney"
+    },
+    {
+      "source": "https://github.com/sasankauppu3/Plagiarism-Detection-Tool",
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoUu_6HsAZM8EPQsvEKVCrLbs18zWKbRD-ZQGEtbbjeQb4_VjfKFMk-oLYDg&s",
+      "original": "https://opengraph.githubassets.com/ea686fb3906579d111ffbfd46ff8f9d2f1c001c371242fed17ee84c596545694/sasankauppu3/Plagiarism-Detection-Tool",
+      "title": "GitHub - sasankauppu3/Plagiarism-Detection-Tool: Tool for ...",
+      "source_name": "GitHub"
+    }
+  ],
+  "inline_videos": [
+    {
+      "position": 1,
+      "title": "Coding a Plagiarism Detector in Python",
+      "link": "https://www.youtube.com/watch?v=LgLai4LepBg",
+      "thumbnail": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/356f743a1d602d0e3699f6273191c5d007bba04cd6393b4a8897bce968769981.jpeg",
+      "channel": "Pyresearch",
+      "duration": "17:44",
+      "platform": "YouTube"
+    },
+    {
+      "position": 2,
+      "title": "Coding a Plagiarism Detector in Python",
+      "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp",
+      "thumbnail": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/356f743a1d602d0e8e96602e0978fc3706d712cf936bf89d765a3292ab9e8c6c.jpeg",
+      "channel": "Mikael Codes",
+      "duration": "13:01",
+      "platform": "YouTube",
+      "key_moments": [
+        {
+          "time": "01:36",
+          "title": "Word Embedding",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=96"
+        },
+        {
+          "time": "02:04",
+          "title": "Detection of Similarity",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=124"
+        },
+        {
+          "time": "02:26",
+          "title": "Building the Detector",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=146"
+        },
+        {
+          "time": "03:21",
+          "title": "Loading Documents",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=201"
+        },
+        {
+          "time": "05:36",
+          "title": "Building the Plagiarism Detector",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=336"
+        },
+        {
+          "time": "07:49",
+          "title": "Calculating Similarity Scores",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=469"
+        },
+        {
+          "time": "09:06",
+          "title": "Returning the Results",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=546"
+        },
+        {
+          "time": "09:35",
+          "title": "Troubleshooting",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=575"
+        },
+        {
+          "time": "10:25",
+          "title": "Reading the Files",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=625"
+        },
+        {
+          "time": "11:59",
+          "title": "Next Steps",
+          "link": "https://www.youtube.com/watch?v=tBqYSzy80xY&pp=ygUMI3BsYWdpYXRvcmlp&t=719"
+        }
+      ]
+    },
+    {
+      "position": 3,
+      "title": "Building a Plagiarism Detector Using Machine Learning ...",
+      "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE",
+      "thumbnail": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/356f743a1d602d0ea17bc75effb41d6dacc8feeb613e6797e95ad33793811556.jpeg",
+      "channel": "AI with Noor",
+      "duration": "54:05",
+      "platform": "YouTube",
+      "key_moments": [
+        {
+          "time": "00:10",
+          "title": "What Is Plagiarism",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=10"
+        },
+        {
+          "time": "04:32",
+          "title": "Feature Extraction",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=272"
+        },
+        {
+          "time": "10:37",
+          "title": "Removing Stop Words",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=637"
+        },
+        {
+          "time": "17:40",
+          "title": "Trend Test Split",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=1060"
+        },
+        {
+          "time": "18:31",
+          "title": "Logistic Regression",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=1111"
+        },
+        {
+          "time": "20:23",
+          "title": "Calculate Confusion Matrix",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=1223"
+        },
+        {
+          "time": "21:37",
+          "title": "Confusion Matrix",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=1297"
+        },
+        {
+          "time": "30:55",
+          "title": "Prediction",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=1855"
+        },
+        {
+          "time": "33:22",
+          "title": "User Interface",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=2002"
+        },
+        {
+          "time": "47:04",
+          "title": "Get the Data from the Form",
+          "link": "https://www.youtube.com/watch?v=eK1fS-QmVaE&t=2824"
+        }
+      ]
+    },
+    {
+      "position": 4,
+      "title": "Plagiarism detector using python",
+      "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0",
+      "thumbnail": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/356f743a1d602d0ebb992dee818ce0e7408c277a48a7e3b3a8120d688d4ec135.jpeg",
+      "channel": "I know python",
+      "duration": "5:06",
+      "platform": "YouTube",
+      "key_moments": [
+        {
+          "time": "00:21",
+          "title": "System requirements",
+          "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0&t=21",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWEyOebwr-D1boosQZpDLufe1Or6F8Zo8C8AJUSUWWPA&s"
+        },
+        {
+          "time": "00:58",
+          "title": "Importing DFlip",
+          "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0&t=58",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOX3bkQm4rf-R5k0cS2WHN4eE64A5cArFDGe2tF8YWlA&s"
+        },
+        {
+          "time": "01:33",
+          "title": "Opening files",
+          "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0&t=93",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxMpqvmoiqoX6aNzSDbHV6TO0GYCqeDbF3s5DqPNmglQ&s"
+        },
+        {
+          "time": "03:12",
+          "title": "Testing the code",
+          "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0&t=192",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwVX87HPEL0hTmvGliP9uWTIBQQFA9Ths4OhSYTY1Qnw&s"
+        },
+        {
+          "time": "04:40",
+          "title": "Conclusion",
+          "link": "https://www.youtube.com/watch?v=lRzC3w2NDg0&t=280",
+          "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqqou4i-eEWybilBYxvTm6vIWt29ITuG3IQEOwr3K54w&s"
+        }
+      ]
+    }
+  ],
+  "related_questions": [
+    {
+      "question": "How to detect plagiarism in Python?",
+      "snippet": null,
+      "title": "Here's how it works:",
+      "date": "Mar 15, 2024",
+      "link": "https://fionamuthoni18.medium.com/creating-a-plagiarism-detector-with-python-a-comprehensive-guide-31b2b79aa03b",
+      "list": [
+        "We calculate the cosine of the angle between the two vectors. If the angle is small (cosine is close to 1), the documents are similar. If it's large (cosine is close to 0), they're dissimilar.",
+        "A higher cosine similarity score means the documents are more similar."
+      ],
+      "displayed_link": "https://fionamuthoni18.medium.com \u203a creating-a-plagia...",
+      "next_page_token": "eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJIb3cgdG8gZGV0ZWN0IHBsYWdpYXJpc20gaW4gUHl0aG9uPyIsImxrIjoiR2g5b2IzY2dkRzhnWkdWMFpXTjBJSEJzWVdkcFlYSnBjMjBnY0hsMGFHOXUiLCJicyI6ImM1MlBNUXZDTUJDRmNjM2tLQm4wYWtjSG9hQk80dEJCUWNFS1N1ZVl4bDZ3YlVwelV2ekxfZ0pIWXgzc1VCZm4tOTczM3JFdDh6ZW1CaktRS0ZLU29NeEVxa1dsYlE2NmdPaE9hSXJWNExrUFBEN0NYMlRaWU96RXBqRUtBbTJCVUlISVVsTnB3aHd1cG1yakg0Ri1pNWNCOEdIWDZadG14T1l4YW9rdG9XczRLMHRnYjVwVTB2aEZ1MEdpa2xjM2V4SXMtS3otSjh4MmJCeUtBa0wzMERvNlFtSTZHeDZId09lZWRLQjBZRnBTTjlqdnZRQSIsImlkIjoiZmNfMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXdfMSJ9",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_related_questions&google_domain=google.com&next_page_token=eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJIb3cgdG8gZGV0ZWN0IHBsYWdpYXJpc20gaW4gUHl0aG9uPyIsImxrIjoiR2g5b2IzY2dkRzhnWkdWMFpXTjBJSEJzWVdkcFlYSnBjMjBnY0hsMGFHOXUiLCJicyI6ImM1MlBNUXZDTUJDRmNjM2tLQm4wYWtjSG9hQk80dEJCUWNFS1N1ZVl4bDZ3YlVwelV2ekxfZ0pIWXgzc1VCZm4tOTczM3JFdDh6ZW1CaktRS0ZLU29NeEVxa1dsYlE2NmdPaE9hSXJWNExrUFBEN0NYMlRaWU96RXBqRUtBbTJCVUlISVVsTnB3aHd1cG1yakg0Ri1pNWNCOEdIWDZadG14T1l4YW9rdG9XczRLMHRnYjVwVTB2aEZ1MEdpa2xjM2V4SXMtS3otSjh4MmJCeUtBa0wzMERvNlFtSTZHeDZId09lZWRLQjBZRnBTTjlqdnZRQSIsImlkIjoiZmNfMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXdfMSJ9"
+    },
+    {
+      "question": "What is the algorithm for plagiarism detection?",
+      "snippet": "Rabin-Karp is one of the algorithms used to detect the similarity levels of two strings. In this case, the string can be either a short sentence or a document containing complex words. In this algorithm, the plagiarism level determination is based on the same hash value on both documents examined.",
+      "title": "Plagiarism Detection by using Karp-Rabin and String Matching ...",
+      "date": "Oct 22, 2024",
+      "link": "https://www.researchgate.net/publication/276136470_Plagiarism_Detection_by_using_Karp-Rabin_and_String_Matching_Algorithm_Together#:~:text=Rabin%2DKarp%20is%20one%20of,value%20on%20both%20documents%20examined.",
+      "displayed_link": "https://www.researchgate.net \u203a publication \u203a 276136470...",
+      "source_logo": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/e0b4215f7e7eb2907eebf3272e2bfbfa4ced28d136837f8b77a449d7a3582bff.png",
+      "next_page_token": "eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBhbGdvcml0aG0gZm9yIHBsYWdpYXJpc20gZGV0ZWN0aW9uPyIsImxrIjoiR2g1d2JHRm5hV0Z5YVhOdElHUmxkR1ZqZEdsdmJpQmhiR2R2Y21sMGFHMCIsImJzIjoiYzUyUE1RdkNNQkNGY2Mza0tCbjBha2NIb2FCTzR0QkJRY0VLU3VlWXhsNndiVXB6VXZ6TF9nSkhZeDNzVUJmbi05NzMzckV0OHplbUJqS1FLRktTb014RXFrV2xiUTY2Z09oT2FJclY0TGtQUEQ3Q1gyVFpZT3pFcGpFS0FtMkJVSUhJVWxOcHdod3VwbXJqSDRGLWk1Y0I4R0hYNlp0bXhPWXhhb2t0b1dzNEswdGdiNXBVMHZoRnUwR2lrbGMzZXhJcy1Lei1KOHgyYkJ5S0FrTDMwRG82UW1JNkd4Nkh3T2VlZEtCMFlGcFNOOWp2dlFBIiwiaWQiOiJmY18yM2I5WjVPWUM5eWFzZU1QLWFPQndBd18xIn0=",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_related_questions&google_domain=google.com&next_page_token=eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBhbGdvcml0aG0gZm9yIHBsYWdpYXJpc20gZGV0ZWN0aW9uPyIsImxrIjoiR2g1d2JHRm5hV0Z5YVhOdElHUmxkR1ZqZEdsdmJpQmhiR2R2Y21sMGFHMCIsImJzIjoiYzUyUE1RdkNNQkNGY2Mza0tCbjBha2NIb2FCTzR0QkJRY0VLU3VlWXhsNndiVXB6VXZ6TF9nSkhZeDNzVUJmbi05NzMzckV0OHplbUJqS1FLRktTb014RXFrV2xiUTY2Z09oT2FJclY0TGtQUEQ3Q1gyVFpZT3pFcGpFS0FtMkJVSUhJVWxOcHdod3VwbXJqSDRGLWk1Y0I4R0hYNlp0bXhPWXhhb2t0b1dzNEswdGdiNXBVMHZoRnUwR2lrbGMzZXhJcy1Lei1KOHgyYkJ5S0FrTDMwRG82UW1JNkd4Nkh3T2VlZEtCMFlGcFNOOWp2dlFBIiwiaWQiOiJmY18yM2I5WjVPWUM5eWFzZU1QLWFPQndBd18xIn0%3D"
+    },
+    {
+      "question": "Which algorithm is best suited for a plagiarism check?",
+      "snippet": "The Longest Common Substring algorithm is best suited for plagiarism checking as it identifies the longest sequences that appear in both texts. This method allows for quick detection of similar passages without gaps.",
+      "title": "Which algorithm is best suited for a plagiarism check? A. Navigation B ...",
+      "date": "Oct 21, 2024",
+      "link": "https://brainly.com/question/53530258#:~:text=The%20Longest%20Common%20Substring%20algorithm,of%20similar%20passages%20without%20gaps.",
+      "displayed_link": "https://brainly.com \u203a question",
+      "source_logo": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/e0b4215f7e7eb2907eebf3272e2bfbfaebe9bec25908a5b13b922f569e4fdd3f.png",
+      "next_page_token": "eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJXaGljaCBhbGdvcml0aG0gaXMgYmVzdCBzdWl0ZWQgZm9yIGEgcGxhZ2lhcmlzbSBjaGVjaz8iLCJsayI6IkdqVjNhR2xqYUNCaGJHZHZjbWwwYUcwZ2FYTWdZbVZ6ZENCemRXbDBaV1FnWm05eUlHRWdjR3hoWjJsaGNtbHpiU0JqYUdWamF3IiwiYnMiOiJjNTJQTVF2Q01CQ0ZjYzNrS0JuMGFrY0hvYUJPNHRCQlFjRUtTdWVZeGw2d2JVcHpVdnpMX2dKSFl4M3NVQmZuLTk3MzNyRXQ4emVtQmpLUUtGS1NvTXhFcWtXbGJRNjZnT2hPYUlyVjRMa1BQRDdDWDJUWllPekVwakVLQW0yQlVJSElVbE5wd2h3dXBtcmpINEYtaTVjQjhHSFg2WnRteE9ZeGFva3RvV3M0SzB0Z2I1cFUwdmhGdTBHaWtsYzNleElzLUt6LUo4eDJiQnlLQWtMMzBEbzZRbUk2R3g2SHdPZWVkS0IwWUZwU045anZ2UUEiLCJpZCI6ImZjXzIzYjlaNU9ZQzl5YXNlTVAtYU9Cd0F3XzEifQ==",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_related_questions&google_domain=google.com&next_page_token=eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJXaGljaCBhbGdvcml0aG0gaXMgYmVzdCBzdWl0ZWQgZm9yIGEgcGxhZ2lhcmlzbSBjaGVjaz8iLCJsayI6IkdqVjNhR2xqYUNCaGJHZHZjbWwwYUcwZ2FYTWdZbVZ6ZENCemRXbDBaV1FnWm05eUlHRWdjR3hoWjJsaGNtbHpiU0JqYUdWamF3IiwiYnMiOiJjNTJQTVF2Q01CQ0ZjYzNrS0JuMGFrY0hvYUJPNHRCQlFjRUtTdWVZeGw2d2JVcHpVdnpMX2dKSFl4M3NVQmZuLTk3MzNyRXQ4emVtQmpLUUtGS1NvTXhFcWtXbGJRNjZnT2hPYUlyVjRMa1BQRDdDWDJUWllPekVwakVLQW0yQlVJSElVbE5wd2h3dXBtcmpINEYtaTVjQjhHSFg2WnRteE9ZeGFva3RvV3M0SzB0Z2I1cFUwdmhGdTBHaWtsYzNleElzLUt6LUo4eDJiQnlLQWtMMzBEbzZRbUk2R3g2SHdPZWVkS0IwWUZwU045anZ2UUEiLCJpZCI6ImZjXzIzYjlaNU9ZQzl5YXNlTVAtYU9Cd0F3XzEifQ%3D%3D"
+    },
+    {
+      "question": "Can ChatGPT do a plagiarism check?",
+      "snippet": null,
+      "title": "AI Overview",
+      "link": "https://support.google.com/websearch?p=ai_overviews&hl=en",
+      "list": [
+        "ChatGPT's Purpose: ChatGPT is a language model, not a plagiarism checker. It's designed to generate text, not to analyze it for similarity to other sources.\u00a0 ",
+        "Plagiarism Detection Requires Specialized Tools: Plagiarism checkers use sophisticated algorithms to identify matches between text and a database of existing content, which is a task that ChatGPT isn't trained to perform.\u00a0 ",
+        "Potential for AI Detection: Some plagiarism checkers are now also designed to detect if text is AI-generated, which could flag some ChatGPT outputs.\u00a0 "
+      ],
+      "displayed_link": null,
+      "next_page_token": "eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJDYW4gQ2hhdEdQVCBkbyBhIHBsYWdpYXJpc20gY2hlY2s/IiwibGsiOiJHaUZqWVc0Z1kyaGhkR2R3ZENCa2J5QmhJSEJzWVdkcFlYSnBjMjBnWTJobFkycyIsImJzIjoiYzUyUE1RdkNNQkNGY2Mza0tCbjBha2NIb2FCTzR0QkJRY0VLU3VlWXhsNndiVXB6VXZ6TF9nSkhZeDNzVUJmbi05NzMzckV0OHplbUJqS1FLRktTb014RXFrV2xiUTY2Z09oT2FJclY0TGtQUEQ3Q1gyVFpZT3pFcGpFS0FtMkJVSUhJVWxOcHdod3VwbXJqSDRGLWk1Y0I4R0hYNlp0bXhPWXhhb2t0b1dzNEswdGdiNXBVMHZoRnUwR2lrbGMzZXhJcy1Lei1KOHgyYkJ5S0FrTDMwRG82UW1JNkd4Nkh3T2VlZEtCMFlGcFNOOWp2dlFBIiwiaWQiOiJmY18yM2I5WjVPWUM5eWFzZU1QLWFPQndBd18xIn0=",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_related_questions&google_domain=google.com&next_page_token=eyJvbnMiOiIxMDA0MSIsImZjIjoiRXFFQkNtSkJRUzFMVkdoa2MwaHNla05WU1d4eFVVUlBhVE5LUjNoeVZ6Z3dVM2RFWVZsb2NEQmtUR1ZVT0Y5TlMwd3pabmQzYjJsWE5IbFFkVmhGUzFRMFgyUkJNQzB0WkRkb1pGQjRhek5wVWkwNWEyZG1ObTA1ZVU1YWVIcElibEJtVW1Galp4SVhNak5pT1ZvMVQxbERPWGxoYzJWTlVDMWhUMEozUVhjYUlrRkRSRmhNTkc1Mk5tTjZlamhPYVZKWk5saDVUVWRDYUZjNFZWTkVZMnRzUVZFIiwiZmN2IjoiMyIsImVpIjoiMjNiOVo1T1lDOXlhc2VNUC1hT0J3QXciLCJxYyI6IkNpVndlWFJvYjI0Z2NHeGhaMmxoY21semJTQmtaWFJsWTNScGIyNGdZV3huYjNKcGRHaHRFQUI5aFRBRlB3IiwicXVlc3Rpb24iOiJDYW4gQ2hhdEdQVCBkbyBhIHBsYWdpYXJpc20gY2hlY2s%2FIiwibGsiOiJHaUZqWVc0Z1kyaGhkR2R3ZENCa2J5QmhJSEJzWVdkcFlYSnBjMjBnWTJobFkycyIsImJzIjoiYzUyUE1RdkNNQkNGY2Mza0tCbjBha2NIb2FCTzR0QkJRY0VLU3VlWXhsNndiVXB6VXZ6TF9nSkhZeDNzVUJmbi05NzMzckV0OHplbUJqS1FLRktTb014RXFrV2xiUTY2Z09oT2FJclY0TGtQUEQ3Q1gyVFpZT3pFcGpFS0FtMkJVSUhJVWxOcHdod3VwbXJqSDRGLWk1Y0I4R0hYNlp0bXhPWXhhb2t0b1dzNEswdGdiNXBVMHZoRnUwR2lrbGMzZXhJcy1Lei1KOHgyYkJ5S0FrTDMwRG82UW1JNkd4Nkh3T2VlZEtCMFlGcFNOOWp2dlFBIiwiaWQiOiJmY18yM2I5WjVPWUM5eWFzZU1QLWFPQndBd18xIn0%3D"
+    }
+  ],
+  "ai_overview": {
+    "page_token": "CokUSHicvZTbkqpGFIYv8yThZm9FRdGZKmpXN4cRERUcD-wbChAaEWwElNG7vEveJm-Qp9kNioc4uypJpdKWwlq9Gv7u9fn_9nu43m7-_OUPP8vi9JWm8zyvI4xR6NYdHNFWetw6tIfDNHH8byjk9inlh5y7pY4HjqGclGtQ7pprMfbL987Y4F-OVuqqk5o1hjnIqXI5Z9okGZCnfwQpbdLkZ_MrI5Cgntbdbd3XcVyLRwtXQvVWo9mrj2krIgXg3wzxPoDkO4PyLYEA0C63POCrW5CTEgkWs7f1vFFEkE-LZ9w9kz9fZLJeFhjTUOGTBlIioioQANRIQkAADeAK3ZVddYn3KwFQ7mpu9fCu-G5HD0MEaqXWy6tk-7ZOAOpMhtfXDUAfqY4wVqYI_GUUB5LrH_Lh-Ly9UqMhR0kwI6dJrxDpVYO2E3Jp0kladI5_f2lgURru5kgynIMws2bdLuuEvNTjZ_s9k38tmXDSKxTpPRTTtun1d57aZRv1YR02r0TIWiCed1_IQqS1ivapvsueHzpKxL4BVSwSb7PykNGYBG9av5wV2sAP_Pn1oIF0PX6tbAyvFSHiz0lZBFqZ0ASjaJxeVJTaNAhyoWoRBBPAkolxOVUw3S_FD8r3S9AoiVSIjstGlKpZMvnAI29oQFQQUPNL3wr9SDvXIHjuuVQGGmknIJJ6IIdgVNRhIL4RnYQIRCQUOs-7K8gv1o6ImAci5Mf_z2cD_yQvg08QkOQRCA7zWs-HZnvi6JPlpm3sNTgOVXBBAEf2PzAG5_-ABBJIiG3cINncIGFBcKogebSNCyQGCUX_YhtPkJS2MSS24XwKiYgrSErbGJS2MSps4waJ_Dcg2VwhgXeQqD-FRK0g8U4VJO0zJOIzJP-RbZSsuOfLo4fsA_TkJaNtrT0AqTuTtLDPmnbNHeJmyg6NNvESL8pe4wSjr-Z69Qpbg-y4onZcfMx8vP0ShxZaW8k6jb6s3Mx1sjVJWiHCyTrzIyoKE8w1LPY0nw0iHah40dp6082im6t6HCzfd3FD1Den-Xts6saqS1iMxY6mJNZ06feBLsS2s2ZsXvEylf1Y4e14aesqXCwn4iL0panIinPeWS3iEzPa4xSBvpaomd70sdqxMWgpQfOjE-XoLRSYPi8uOn5rlJeiUm5oKsn3xBuxkkNFicMRvnYAUKljmW564Dy32egwbqfZs1cNps1QEcqOMdf7ASryTJo",
+    "serpapi_link": "https://serpapi.com/search.json?engine=google_ai_overview&page_token=CokUSHicvZTbkqpGFIYv8yThZm9FRdGZKmpXN4cRERUcD-wbChAaEWwElNG7vEveJm-Qp9kNioc4uypJpdKWwlq9Gv7u9fn_9nu43m7-_OUPP8vi9JWm8zyvI4xR6NYdHNFWetw6tIfDNHH8byjk9inlh5y7pY4HjqGclGtQ7pprMfbL987Y4F-OVuqqk5o1hjnIqXI5Z9okGZCnfwQpbdLkZ_MrI5Cgntbdbd3XcVyLRwtXQvVWo9mrj2krIgXg3wzxPoDkO4PyLYEA0C63POCrW5CTEgkWs7f1vFFEkE-LZ9w9kz9fZLJeFhjTUOGTBlIioioQANRIQkAADeAK3ZVddYn3KwFQ7mpu9fCu-G5HD0MEaqXWy6tk-7ZOAOpMhtfXDUAfqY4wVqYI_GUUB5LrH_Lh-Ly9UqMhR0kwI6dJrxDpVYO2E3Jp0kladI5_f2lgURru5kgynIMws2bdLuuEvNTjZ_s9k38tmXDSKxTpPRTTtun1d57aZRv1YR02r0TIWiCed1_IQqS1ivapvsueHzpKxL4BVSwSb7PykNGYBG9av5wV2sAP_Pn1oIF0PX6tbAyvFSHiz0lZBFqZ0ASjaJxeVJTaNAhyoWoRBBPAkolxOVUw3S_FD8r3S9AoiVSIjstGlKpZMvnAI29oQFQQUPNL3wr9SDvXIHjuuVQGGmknIJJ6IIdgVNRhIL4RnYQIRCQUOs-7K8gv1o6ImAci5Mf_z2cD_yQvg08QkOQRCA7zWs-HZnvi6JPlpm3sNTgOVXBBAEf2PzAG5_-ABBJIiG3cINncIGFBcKogebSNCyQGCUX_YhtPkJS2MSS24XwKiYgrSErbGJS2MSps4waJ_Dcg2VwhgXeQqD-FRK0g8U4VJO0zJOIzJP-RbZSsuOfLo4fsA_TkJaNtrT0AqTuTtLDPmnbNHeJmyg6NNvESL8pe4wSjr-Z69Qpbg-y4onZcfMx8vP0ShxZaW8k6jb6s3Mx1sjVJWiHCyTrzIyoKE8w1LPY0nw0iHah40dp6082im6t6HCzfd3FD1Den-Xts6saqS1iMxY6mJNZ06feBLsS2s2ZsXvEylf1Y4e14aesqXCwn4iL0panIinPeWS3iEzPa4xSBvpaomd70sdqxMWgpQfOjE-XoLRSYPi8uOn5rlJeiUm5oKsn3xBuxkkNFicMRvnYAUKljmW564Dy32egwbqfZs1cNps1QEcqOMdf7ASryTJo"
+  },
+  "organic_results": [
+    {
+      "position": 1,
+      "title": "Creating a Plagiarism Detector with Python - Fiona Githaiga",
+      "link": "https://fionamuthoni18.medium.com/creating-a-plagiarism-detector-with-python-a-comprehensive-guide-31b2b79aa03b",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://fionamuthoni18.medium.com/creating-a-plagiarism-detector-with-python-a-comprehensive-guide-31b2b79aa03b&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECBoQAQ",
+      "displayed_link": "4 likes \u00b7 1 year ago",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e910788609f866e35783adc4fe3fcd2d9c86e972a.png",
+      "snippet": "To create a plagiarism detector in Python, you'll need several libraries to handle text processing, feature extraction, and similarity calculation.",
+      "snippet_highlighted_words": [
+        "plagiarism",
+        "Python"
+      ],
+      "source": "Medium \u00b7 Fiona Githaiga"
+    },
+    {
+      "position": 2,
+      "title": "Advanced Plagiarism Detector Using Python and AI [4 Methods]",
+      "link": "https://hasanaboulhasan.medium.com/advanced-plagiarism-detector-using-python-and-ai-4-methods-2e8a4e0b0243",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://hasanaboulhasan.medium.com/advanced-plagiarism-detector-using-python-and-ai-4-methods-2e8a4e0b0243&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECBgQAQ",
+      "displayed_link": "60+ likes \u00b7 1 year ago",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e91078860917ee8c4910b1140de56d41a369d194c.png",
+      "snippet": "Returns dict: A JSON dictionary containing the plagiarism score and the raw data from the analysis. \"\"\" plagiarism_results = {} # Dictionary to ...",
+      "snippet_highlighted_words": [
+        "plagiarism",
+        "plagiarism_results"
+      ],
+      "source": "Medium \u00b7 Hasan Aboul Hasan"
+    },
+    {
+      "position": 3,
+      "title": "A simple algorithm for plagiarism detection",
+      "link": "https://www.reddit.com/r/algorithms/comments/l4shp8/a_simple_algorithm_for_plagiarism_detection/",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.reddit.com/r/algorithms/comments/l4shp8/a_simple_algorithm_for_plagiarism_detection/&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECEEQAQ",
+      "displayed_link": "10+ comments \u00b7 4 years ago",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e91078860543f5b23ddce6e716a6296e9e32811c4.png",
+      "snippet": "Document fingerprinting is a common technique for plagiarism detection; basically, you use a sliding window to compute a list of hashes for each ...",
+      "snippet_highlighted_words": [
+        "plagiarism detection"
+      ],
+      "sitelinks": {
+        "list": [
+          {
+            "title": "Coding Plagiarism : r/learnprogramming",
+            "link": "https://www.reddit.com/r/learnprogramming/comments/107hwg3/coding_plagiarism/",
+            "answer_count": 79,
+            "date": "Jan 9, 2023"
+          },
+          {
+            "title": "How do code plagiarism detection systems work?",
+            "link": "https://www.reddit.com/r/compsci/comments/hfb3qy/how_do_code_plagiarism_detection_systems_work/",
+            "answer_count": 65,
+            "date": "Jun 24, 2020"
+          }
+        ]
+      },
+      "source": "Reddit \u00b7 r/algorithms"
+    },
+    {
+      "position": 4,
+      "title": "GitProSolutions/Plagiarism-Checker",
+      "link": "https://github.com/GitProSolutions/Plagiarism-Checker",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://github.com/GitProSolutions/Plagiarism-Checker&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECDAQAQ",
+      "displayed_link": "https://github.com \u203a GitProSolutions \u203a Plagiarism-Chec...",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e91078860d41880e6b5266af7c992917ad725a4a0.png",
+      "snippet": "Plagiarism Checker is a Python program that compares two text files and calculates the similarity score between them. It uses the cosine similarity measure ...",
+      "snippet_highlighted_words": [
+        "Plagiarism",
+        "Python"
+      ],
+      "source": "GitHub"
+    },
+    {
+      "position": 5,
+      "title": "Moss - Plagiarism Detection",
+      "link": "https://theory.stanford.edu/~aiken/moss/",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://theory.stanford.edu/~aiken/moss/&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECC8QAQ",
+      "displayed_link": "https://theory.stanford.edu \u203a ~aiken \u203a moss",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e91078860f20c2d577cbf6666b3caa8994c02f8d9.png",
+      "snippet": "To date, the main application of Moss has been in detecting plagiarism in programming classes. Since its development in 1994, Moss has been very effective in ...",
+      "snippet_highlighted_words": [
+        "plagiarism"
+      ],
+      "source": "Stanford CS Theory"
+    },
+    {
+      "position": 6,
+      "title": "A Support Vector Machine based approach for plagiarism ...",
+      "link": "https://www.frontiersin.org/journals/computer-science/articles/10.3389/fcomp.2024.1393723/full",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.frontiersin.org/journals/computer-science/articles/10.3389/fcomp.2024.1393723/full&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECC4QAQ",
+      "displayed_link": "https://www.frontiersin.org \u203a fcomp.2024.1393723 \u203a full",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e9107886096b1d1879343e6dde89418e09b6be0da.png",
+      "author": "by N Gandhi",
+      "snippet": "This manuscript proposes a customized plagiarism detection algorithm tailored to detect source code plagiarism in the Python programming language.",
+      "snippet_highlighted_words": [
+        "plagiarism detection algorithm",
+        "plagiarism",
+        "Python"
+      ],
+      "source": "Frontiers"
+    },
+    {
+      "position": 7,
+      "title": "How to Build a Plagiarism Detector Using Python",
+      "link": "https://www.makeuseof.com/python-plagiarism-detector-how-to-build/",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.makeuseof.com/python-plagiarism-detector-how-to-build/&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECDEQAQ",
+      "displayed_link": "https://www.makeuseof.com \u203a Programming",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e9107886006da1c71d6f834366f27faa03df79ab6.png",
+      "date": "Aug 9, 2023",
+      "snippet": "To build a plagiarism detector, you'll use Tkinter and the Difflib module. Tkinter is a simple, cross-platform, library that you can use to create graphical ...",
+      "snippet_highlighted_words": [
+        "plagiarism",
+        "Tkinter and the Difflib module"
+      ],
+      "source": "MakeUseOf"
+    },
+    {
+      "position": 8,
+      "title": "Getting started plagiarism detection in python using pysimilar",
+      "link": "https://blog.neurotech.africa/plagiarism-detection-with-pysimilar-in-python/",
+      "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://blog.neurotech.africa/plagiarism-detection-with-pysimilar-in-python/&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQFnoECDMQAQ",
+      "displayed_link": "https://blog.neurotech.africa \u203a plagiarism-detection-with-...",
+      "favicon": "https://serpapi.com/searches/67fd76dac32c23ba08605df6/images/345a1b07fd3ed2ca65e5aa5e910788609ae7e77573719932e509e3c365c30746.png",
+      "date": "Feb 1, 2022",
+      "snippet": "In this blog post, I will show you how you can detect textual plagiarism with Python using the Pysimilar library in just two lines of code.",
+      "snippet_highlighted_words": [
+        "detect",
+        "plagiarism",
+        "Python"
+      ],
+      "missing": [
+        "algorithm"
+      ],
+      "must_include": {
+        "word": "algorithm",
+        "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=python+plagiarism+detection+%22algorithm%22&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ5t4CegQISRAB"
+      },
+      "source": "Neurotech Africa"
+    }
+  ],
+  "top_stories_link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&udm=7&q=python+plagiarism+detection+algorithm&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8ccDKAR6BAhQEAY",
+  "top_stories_serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm",
+  "related_searches": [
+    {
+      "block_position": 1,
+      "query": "Python plagiarism detection algorithm github",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+plagiarism+detection+algorithm+github&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAhIEAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+plagiarism+detection+algorithm+github"
+    },
+    {
+      "block_position": 1,
+      "query": "Python plagiarism detection algorithm free",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+plagiarism+detection+algorithm+free&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAhFEAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+plagiarism+detection+algorithm+free"
+    },
+    {
+      "block_position": 1,
+      "query": "Python plagiarism detection algorithm example",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+plagiarism+detection+algorithm+example&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAhCEAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+plagiarism+detection+algorithm+example"
+    },
+    {
+      "block_position": 1,
+      "query": "Python plagiarism detection algorithm pdf",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+plagiarism+detection+algorithm+pdf&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAg8EAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+plagiarism+detection+algorithm+pdf"
+    },
+    {
+      "block_position": 1,
+      "query": "Python plagiarism detection algorithm for students",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+plagiarism+detection+algorithm+for+students&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAg3EAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+plagiarism+detection+algorithm+for+students"
+    },
+    {
+      "block_position": 1,
+      "query": "plagiarism-checker python github",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=plagiarism-checker+python+github&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAg0EAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=plagiarism-checker+python+github"
+    },
+    {
+      "block_position": 1,
+      "query": "Python code plagiarism checker online free",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Python+code+plagiarism+checker+online+free&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAgyEAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Python+code+plagiarism+checker+online+free"
+    },
+    {
+      "block_position": 1,
+      "query": "Plagiarism-detection using machine learning github",
+      "link": "https://www.google.com/search?sca_esv=fe1053e518bd0343&gl=us&hl=en&q=Plagiarism-detection+using+machine+learning+github&sa=X&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ1QJ6BAgtEAE",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=Plagiarism-detection+using+machine+learning+github"
+    }
+  ],
+  "scholarly_articles": {
+    "title": "Scholarly articles for python plagiarism detection algorithm",
+    "link": "https://scholar.google.com/scholar?q=python+plagiarism+detection+algorithm&hl=en&as_sdt=0&as_vis=1&oi=scholart",
+    "serpapi_link": "https://serpapi.com/search.json?as_sdt=0&as_vis=1&engine=google_scholar&hl=en&num=10&q=python+plagiarism+detection+algorithm",
+    "articles": [
+      {
+        "title": "Plagiarism detection tool \u201cparikshak\u201d",
+        "link": "https://ieeexplore.ieee.org/abstract/document/7045739/",
+        "highlighted_words": [
+          "Plagiarism detection"
+        ],
+        "author": "\u200eSharma"
+      },
+      {
+        "title": "Plagiarism detection in algorithms-A case study using \u2026",
+        "link": "https://ceur-ws.org/Vol-2733/paper23.pdf",
+        "highlighted_words": [
+          "Plagiarism detection",
+          "algorithms"
+        ],
+        "author": "\u200eManso"
+      },
+      {
+        "title": "\u2026 plagiarism detection in multiprogramming languages \u2026",
+        "link": "https://www.academia.edu/download/112879071/Concurrency_and_Computation_2018_Ullah_Software_plagiarism_detection_in_multiprogramming_languages_using_machine.pdf",
+        "highlighted_words": [
+          "plagiarism detection"
+        ],
+        "author": "\u200eUllah"
+      }
+    ]
+  },
+  "pagination": {
+    "current": 1,
+    "next": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=10&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8NMDegQIDBAW",
+    "other_pages": {
+      "2": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=10&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAE",
+      "3": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=20&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAG",
+      "4": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=30&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAI",
+      "5": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=40&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAK",
+      "6": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=50&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAM",
+      "7": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=60&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAO",
+      "8": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=70&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAQ",
+      "9": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=80&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAS",
+      "10": "https://www.google.com/search?q=python+plagiarism+detection+algorithm&sca_esv=fe1053e518bd0343&gl=us&hl=en&ei=23b9Z5OYC9yaseMP-aOBwAw&start=90&sa=N&sstk=Af40H4X1GSdX1CvdysYTm0pOBjOAvgb1H9TPJ2oHrGw4crgbISzuMxprt65hxHk-e6gK7f3lWIl2TZJH4PFwmlMQCDOUlFSn1rOSaQ&ved=2ahUKEwjT8ef2tNiMAxVcTWwGHflRAMgQ8tMDegQIDBAU"
+    }
+  },
+  "serpapi_pagination": {
+    "current": 1,
+    "next_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=10",
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=10",
+    "other_pages": {
+      "2": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=10",
+      "3": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=20",
+      "4": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=30",
+      "5": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=40",
+      "6": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=50",
+      "7": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=60",
+      "8": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=70",
+      "9": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=80",
+      "10": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&num=10&q=python+plagiarism+detection+algorithm&start=90"
+    }
+  }
+}

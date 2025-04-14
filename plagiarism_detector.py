@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 def search_online(query, num_results=5):
     """
     Search for the query text online using SerpAPI.
-    This function should be replaced with an actual implementation using a search API.
     """
     try:
         # Get API key from environment variable
@@ -44,20 +43,73 @@ def search_online(query, num_results=5):
         params = {
             "q": query,
             "api_key": api_key,
-            "num": num_results
+            "num": num_results,
+            "gl": "us",  # Set to US for more reliable results
+            "hl": "en"   # Set to English
         }
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
         
-        search_results = response.json().get("organic_results", [])
-        return [{"title": result.get("title", ""), 
-                 "link": result.get("link", ""), 
-                 "snippet": result.get("snippet", "")} 
-                for result in search_results]
+        try:
+            logger.info(f"Sending search request for query: {query[:30]}...")
+            response = requests.get("https://serpapi.com/search", params=params, timeout=15)
+            response.raise_for_status()
+            
+            # Parse and validate response
+            response_data = response.json()
+            
+            if "error" in response_data:
+                logger.error(f"SerpAPI returned error: {response_data['error']}")
+                return [{"title": "Search API Error", "link": "#", "snippet": f"Error: {response_data['error']}"}]
+                
+            # Get organic results, handling different response formats
+            search_results = response_data.get("organic_results", [])
+            
+            if not search_results and "error" not in response_data:
+                logger.warning(f"No organic results found in SerpAPI response, keys: {list(response_data.keys())}")
+                
+                # Try alternative key that might be used
+                search_results = response_data.get("results", [])
+                
+                # If still no results, check for other possible containers
+                if not search_results:
+                    search_results = response_data.get("search_results", [])
+                
+            logger.info(f"Found {len(search_results)} search results")
+            
+            # Process and validate each result
+            processed_results = []
+            for result in search_results:
+                if not isinstance(result, dict):
+                    logger.warning(f"Skipping non-dictionary result: {result}")
+                    continue
+                    
+                title = result.get("title", "")
+                link = result.get("link", "")
+                snippet = result.get("snippet", "")
+                
+                # Validate link - must be a string and a valid URL
+                if not isinstance(link, str) or not link or link == "#":
+                    logger.warning(f"Skipping result with invalid link: {link}")
+                    continue
+                    
+                processed_results.append({
+                    "title": title if isinstance(title, str) else "",
+                    "link": link,
+                    "snippet": snippet if isinstance(snippet, str) else ""
+                })
+                
+            return processed_results
+            
+        except ValueError as e:
+            logger.error(f"Error parsing JSON from SerpAPI: {str(e)}")
+            return [{"title": "JSON Parsing Error", "link": "#", "snippet": f"Error: {str(e)}"}]
+        
+        except requests.RequestException as e:
+            logger.error(f"HTTP error from SerpAPI: {str(e)}")
+            return [{"title": "Search API HTTP Error", "link": "#", "snippet": f"Error: {str(e)}"}]
     
-    except requests.RequestException as e:
-        logger.error(f"Error searching online: {str(e)}")
-        return [{"title": "Search API Error", "link": "#", "snippet": f"Error: {str(e)}"}]
+    except Exception as e:
+        logger.error(f"Unexpected error in search_online: {str(e)}")
+        return [{"title": "Search Error", "link": "#", "snippet": f"Error: {str(e)}"}]
 
 def preprocess_text(text):
     """Preprocess text for comparison."""

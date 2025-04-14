@@ -3,11 +3,6 @@ import logging
 import requests
 from urllib.parse import urlparse
 import time
-import http.client
-
-# Set shorter timeout for HTTP connections to prevent hanging
-http.client._MAXHEADERS = 100
-requests.packages.urllib3.util.connection.TIMEOUT_DEFAULT = 10
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +23,11 @@ def get_website_text_content(url: str) -> str:
     if not is_valid_url(url):
         logger.warning(f"Invalid URL format: {url}")
         return ""
-        
-    # Add user agent to avoid being blocked
-    custom_config = {
-        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'TIMEOUT': 10,  # 10 seconds timeout
-    }
     
     try:
-        # Send a request to the website with timeout
+        # Simple approach without custom config - trafilatura handles user agent and timeouts internally
         start_time = time.time()
-        downloaded = trafilatura.fetch_url(url, config=custom_config)
+        downloaded = trafilatura.fetch_url(url)
         
         # If it takes too long, bail out
         if time.time() - start_time > 15:  # 15 seconds maximum
