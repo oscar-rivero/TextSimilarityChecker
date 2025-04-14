@@ -1090,131 +1090,134 @@ def extract_literary_entities(text):
 def extract_key_phrases(text):
     """
     Extract key phrases using POS tagging to identify linguistically meaningful structures.
-    This addresses the need to extract proper noun phrases, verb phrases, etc., 
-    without relying on simple filters or stopword lists.
+    Extracts all terms in VERB, NOUN, ADVERB, ADJECTIVE categories without stopwords,
+    and forms search terms as NOUN PHRASES according to grammar rules.
     """
-    # Clean the text first - remove punctuation that's not part of words
+    # Clean the text first - remove punctuation 
     clean_text = re.sub(r'[^\w\s-]', ' ', text)
     
-    # Get stopwords to filter out unimportant words
+    # Get stopwords to filter out
     stop_words = set(stopwords.words('english'))
     
     # Tokenize and tag parts of speech
     tokens = word_tokenize(clean_text)
     tagged = nltk.pos_tag(tokens)
     
-    # Store all meaningful phrases we extract
-    all_phrases = []
+    # Store all content words (VERB, NOUN, ADVERB, ADJECTIVE without stopwords)
+    content_words = []
+    for word, tag in tagged:
+        # Check if word is a content word (VERB, NOUN, ADVERB, ADJECTIVE)
+        if (tag.startswith('VB') or tag.startswith('NN') or tag.startswith('RB') or tag.startswith('JJ')):
+            # Only include if not a stopword
+            if word.lower() not in stop_words and len(word) > 2:
+                content_words.append((word, tag))
     
-    # 1. Extract noun phrases (NP)
-    # Pattern: (Optional determiner) + (Optional adjectives) + (One or more nouns)
+    # Store all NOUN PHRASES we extract
+    noun_phrases = []
+    
+    # Extract complete noun phrases according to grammar rules
     i = 0
     while i < len(tagged):
-        # Skip determiners (we don't want "the beetle", just "beetle")
-        if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
-            i += 1
-            continue
-            
-        # Start collecting a potential noun phrase
-        phrase_tokens = []
-        original_i = i
+        # Start a new noun phrase
+        np_tokens = []
         has_noun = False
+        start_idx = i
         
-        # Look for adjectives followed by nouns
-        while i < len(tagged):
-            # Adjectives (JJ, JJR, JJS)
-            if tagged[i][1].startswith('JJ'):
-                if tagged[i][0].lower() not in stop_words:
-                    phrase_tokens.append(tagged[i][0])
-                i += 1
-            # Nouns (NN, NNS, NNP, NNPS)
-            elif tagged[i][1].startswith('NN'):
-                has_noun = True
-                if tagged[i][0].lower() not in stop_words:
-                    phrase_tokens.append(tagged[i][0])
-                i += 1
-            # Break if not an adjective or noun
-            else:
-                break
+        # Find determiner (optional)
+        det = None
+        if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
+            det = tagged[i][0]
+            i += 1
         
-        # Only add phrases that have at least one noun and aren't stopwords
-        if has_noun and phrase_tokens:
-            # Filter out single-word phrases that are too common/generic
-            phrase = " ".join(phrase_tokens)
-            if len(phrase_tokens) > 1 or phrase.lower() not in ['beetle', 'young', 'adult', 'larva', 'pupa']:
-                all_phrases.append(phrase)
+        # Find adjectives (optional)
+        while i < len(tagged) and tagged[i][1].startswith('JJ'):
+            if tagged[i][0].lower() not in stop_words:
+                np_tokens.append(tagged[i][0])
+            i += 1
         
-        # Ensure we always make progress
-        if i == original_i:
+        # Find nouns (required for a noun phrase)
+        while i < len(tagged) and tagged[i][1].startswith('NN'):
+            has_noun = True
+            if tagged[i][0].lower() not in stop_words:
+                np_tokens.append(tagged[i][0])
+            i += 1
+            
+        # Check if we found a valid noun phrase
+        if has_noun and np_tokens:
+            phrase = " ".join(np_tokens)
+            if phrase not in noun_phrases and len(phrase) > 2:
+                noun_phrases.append(phrase)
+        
+        # If we didn't advance, move forward
+        if i == start_idx:
             i += 1
     
-    # 2. Extract verb phrases (VP)
-    # Pattern: Verb + (Optional objects or complements)
+    # Extract verb phrases (verb + noun combinations)
+    verb_phrases = []
     i = 0
     while i < len(tagged):
-        # Look for verbs
+        # Find verbs
         if tagged[i][1].startswith('VB'):
             verb = tagged[i][0]
-            # Skip common auxiliary verbs
-            if verb.lower() in ['is', 'are', 'was', 'were', 'be', 'been', 'being',
-                               'have', 'has', 'had', 'do', 'does', 'did']:
-                i += 1
-                continue
+            # Skip auxiliary verbs
+            if verb.lower() not in ['is', 'are', 'was', 'were', 'be', 'been', 'being',
+                                  'have', 'has', 'had', 'do', 'does', 'did']:
+                # Look ahead for object nouns
+                j = i + 1
+                # Skip determiners
+                if j < len(tagged) and tagged[j][1] in ['DT', 'PRP$']:
+                    j += 1
+                # Find any adjectives
+                adj_tokens = []
+                while j < len(tagged) and tagged[j][1].startswith('JJ'):
+                    if tagged[j][0].lower() not in stop_words:
+                        adj_tokens.append(tagged[j][0])
+                    j += 1
+                # Find nouns
+                noun_tokens = []
+                while j < len(tagged) and tagged[j][1].startswith('NN'):
+                    if tagged[j][0].lower() not in stop_words:
+                        noun_tokens.append(tagged[j][0])
+                    j += 1
                 
-            phrase_tokens = [verb]
+                # If we found a noun, create a verb phrase
+                if noun_tokens and verb.lower() not in stop_words:
+                    vp = [verb] + adj_tokens + noun_tokens
+                    phrase = " ".join(vp)
+                    if phrase not in verb_phrases and len(phrase) > 2:
+                        verb_phrases.append(phrase)
             i += 1
-            
-            # Look for objects (nouns or noun phrases)
-            # Skip determiners
-            if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
-                i += 1
-                
-            # Collect object (adjectives + nouns)
-            has_content = False
-            while i < len(tagged) and (tagged[i][1].startswith('JJ') or tagged[i][1].startswith('NN')):
-                if tagged[i][0].lower() not in stop_words:
-                    phrase_tokens.append(tagged[i][0])
-                    has_content = True
-                i += 1
-                
-            if has_content:
-                all_phrases.append(" ".join(phrase_tokens))
         else:
             i += 1
     
-    # 3. Extract prepositional phrases (PP)
-    # Pattern: Preposition + Noun Phrase
+    # Extract adverb phrases (combinations with verbs)
+    adverb_phrases = []
     i = 0
     while i < len(tagged):
-        # Look for prepositions
-        if tagged[i][1] == 'IN':
-            prep = tagged[i][0]
-            # Skip certain prepositions that aren't meaningful on their own
-            if prep.lower() in ['of', 'on', 'in', 'at', 'by', 'for', 'with']:
-                i += 1
-                continue
-                
-            phrase_tokens = [prep]
+        # Find adverbs
+        if tagged[i][1].startswith('RB') and tagged[i][0].lower() not in stop_words:
+            adverb = tagged[i][0]
+            # Look ahead for verbs
+            j = i + 1
+            if j < len(tagged) and tagged[j][1].startswith('VB') and tagged[j][0].lower() not in stop_words:
+                phrase = f"{adverb} {tagged[j][0]}"
+                if phrase not in adverb_phrases and len(phrase) > 2:
+                    adverb_phrases.append(phrase)
             i += 1
-            
-            # Skip determiners
-            if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
-                i += 1
-                
-            # Collect noun phrase
-            has_content = False
-            while i < len(tagged) and (tagged[i][1].startswith('JJ') or tagged[i][1].startswith('NN')):
-                if tagged[i][0].lower() not in stop_words:
-                    phrase_tokens.append(tagged[i][0])
-                    has_content = True
-                i += 1
-                
-            if has_content:
-                all_phrases.append(" ".join(phrase_tokens))
         else:
             i += 1
     
-    # 4. Additionally, look for specific patterns important for domain analysis
+    # Extract noun-adjective combinations
+    adj_noun_phrases = []
+    for i in range(len(tagged) - 1):
+        if (tagged[i][1].startswith('JJ') and tagged[i+1][1].startswith('NN') and
+            tagged[i][0].lower() not in stop_words and tagged[i+1][0].lower() not in stop_words):
+            phrase = f"{tagged[i][0]} {tagged[i+1][0]}"
+            if phrase not in adj_noun_phrases and len(phrase) > 2:
+                adj_noun_phrases.append(phrase)
+    
+    # Look for domain-specific patterns
+    pattern_phrases = []
     patterns = [
         # Measurements
         r'([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)',
@@ -1222,166 +1225,177 @@ def extract_key_phrases(text):
         r'(green|yellow|brown|black|red|orange|blue|purple|white|grey|gray)\s+(?:in\s+)?colou?r(?:ation)?',
         # Physical characteristics
         r'([a-z]+)\s+appearance',
-        # Habitat
-        r'(?:inhabits|found in|lives in)\s+([a-z\s]+)',
-        # Behaviors
-        r'(?:feeds on|eats|consumes)\s+([a-z\s]+)'
+        # Biological terms (specific for beetle texts)
+        r'(?:exoskeleton|abdomen|thorax|antenna|elytra|wings?|segments?)',
+        # Life stages
+        r'(?:larva|pupa|adult|nymph|egg|instar)'
     ]
     
     for pattern in patterns:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
             phrase = match.group(0).lower()
-            if phrase and phrase not in [p.lower() for p in all_phrases]:
+            if phrase not in pattern_phrases and len(phrase) > 2:
+                pattern_phrases.append(phrase)
+    
+    # Combine all types of phrases, prioritizing multi-word phrases
+    all_phrases = []
+    
+    # Add multi-word phrases first
+    for phrase_list in [noun_phrases, verb_phrases, adverb_phrases, adj_noun_phrases, pattern_phrases]:
+        for phrase in phrase_list:
+            if len(phrase.split()) > 1 and phrase not in all_phrases:
                 all_phrases.append(phrase)
     
-    # Filter out phrases that are too short
-    filtered_phrases = [phrase for phrase in all_phrases if len(phrase) > 3]
+    # Add important single words if we don't have enough phrases
+    if len(all_phrases) < 5:
+        important_single_words = []
+        # Extract single NOUN, VERB, ADJ, ADV that aren't already part of phrases
+        for word, tag in content_words:
+            if word.lower() not in stop_words and len(word) > 3:
+                # Check if this word isn't already part of a phrase
+                if not any(word.lower() in phrase.lower() for phrase in all_phrases):
+                    important_single_words.append(word)
+        
+        # Add most important single words
+        for word in important_single_words[:5]:
+            if len(all_phrases) < 10:
+                all_phrases.append(word)
     
-    # Make sure all phrases have at least one non-stopword
-    result_phrases = []
-    for phrase in filtered_phrases:
+    # Filter out any remaining phrases that are too short or lack substance
+    final_phrases = []
+    for phrase in all_phrases:
         words = phrase.split()
         non_stop_words = [word for word in words if word.lower() not in stop_words]
-        if non_stop_words:
-            result_phrases.append(phrase)
+        if non_stop_words and len(phrase) > 2:
+            final_phrases.append(phrase)
     
-    return result_phrases
+    return final_phrases
 
 def generate_search_terms(category, text):
-    """Generate targeted search terms based on the identified category and text content."""
+    """
+    Generate targeted search terms based on the identified category and text content.
+    This now includes all terms in VERB, NOUN, ADVERB, ADJECTIVE categories without stopwords,
+    and forms search terms as NOUN PHRASES according to grammar rules.
+    The complete list of noun phrases from the input will be included as search terms.
+    The text classification result is also added as a search term.
+    """
     search_terms = []
-    scientific_names = []
     
-    # Look for scientific names (Latin binomials) - highest priority for biology texts
+    # First, extract ALL key phrases using our comprehensive linguistic analysis
+    key_phrases = extract_key_phrases(text)
+    logger.info(f"Extracted {len(key_phrases)} key phrases using POS tagging")
+    
+    # Safety check - problematic terms to filter out
+    problematic_terms = ["the young", "the adult", "young", "adult", "the", "a", "an"]
+    
+    # 1. ADD THE CLASSIFICATION CATEGORY FIRST
+    # Always include the category as a search term
+    if category != "general":
+        search_terms.append(category)
+    
+    # 2. LOOK FOR SCIENTIFIC NAMES (for biology texts)
+    scientific_names = []
     latin_name_matches = re.findall(r'\b([A-Z][a-z]+)\s+([a-z]+)\b', text)
     for genus, species in latin_name_matches:
         scientific_names.append(f"{genus} {species}")
     
-    # Extract domain-specific entities based on the category
-    domain_entities = extract_domain_entities(text, category)
-    
-    # Safety check - ensure we don't have problematic tokens
-    problematic_terms = ["the young", "the adult", "young", "adult", "the"]
-    
-    # Create a second list of filtered domain entities to be extra safe
-    filtered_domain_entities = []
-    for entity in domain_entities:
-        if entity.lower() not in problematic_terms and not any(entity.lower().startswith(term) for term in ["the ", "a "]):
-            filtered_domain_entities.append(entity)
-    
-    # For any category, if we have scientific names, they're usually high-value search terms
     if scientific_names:
         for name in scientific_names[:2]:  # Top 2 scientific names
-            search_terms.append(name)
-            # For encyclopedic content, searching with "wikipedia" is helpful
-            search_terms.append(f"{name} wikipedia")
-            # Add category for good measure
-            if len(search_terms) < 4:
-                search_terms.append(f"{name} {category}")
+            if name not in search_terms:
+                search_terms.append(name)
     
-    # If we have domain-specific entities, use them intelligently
+    # 3. ADD NOUN PHRASES FROM THE TEXT
+    # Add all extracted noun phrases, filtering out problematic ones
+    valid_phrases = []
+    for phrase in key_phrases:
+        # Skip phrases that are too short
+        if len(phrase) < 3:
+            continue
+        
+        # Skip phrases that match problematic terms exactly
+        if phrase.lower() in [p.lower() for p in problematic_terms]:
+            continue
+        
+        # Skip phrases that start with problematic prefixes
+        if any(phrase.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"]):
+            continue
+        
+        # Add the filtered phrase
+        valid_phrases.append(phrase)
+    
+    # Add valid phrases as search terms
+    for phrase in valid_phrases:
+        if phrase not in search_terms:
+            search_terms.append(phrase)
+    
+    # 4. DOMAIN-SPECIFIC COMBINATIONS
+    # Extract domain-specific entities
+    domain_entities = extract_domain_entities(text, category)
+    
+    # Filter out problematic domain entities
+    filtered_domain_entities = []
+    for entity in domain_entities:
+        if (entity.lower() not in problematic_terms and 
+            not any(entity.lower().startswith(term) for term in ["the ", "a ", "an "])):
+            filtered_domain_entities.append(entity)
+    
+    # If we have domain entities, create combinations
     if filtered_domain_entities:
-        # Determine if there's a primary entity type for this domain
+        # Get primary entity
         primary_entity = get_primary_entity(filtered_domain_entities, category)
         
-        # Be extra sure our primary entity isn't in the problematic list
-        if primary_entity and primary_entity.lower() in problematic_terms:
-            # Try to find another entity
-            filtered_domain_entities = [e for e in filtered_domain_entities if e.lower() not in problematic_terms]
-            primary_entity = get_primary_entity(filtered_domain_entities, category) if filtered_domain_entities else None
-        
-        # Add primary entity searches
         if primary_entity:
             # Combine primary entity with category (e.g., "beetle biology")
-            if f"{primary_entity} {category}" not in search_terms:
-                search_terms.append(f"{primary_entity} {category}")
-            
-            # If we have scientific name and primary entity, combine them
-            if scientific_names and f"{scientific_names[0]} {primary_entity}" not in search_terms:
-                search_terms.append(f"{scientific_names[0]} {primary_entity}")
-            
-            # Add specialized search with Wikipedia for encyclopedic content
-            if f"{primary_entity} wikipedia" not in search_terms:
-                search_terms.append(f"{primary_entity} wikipedia")
-        
-        # Get secondary entities that complement the primary entity
-        secondary_entities = get_secondary_entities(filtered_domain_entities, primary_entity, category)
-        
-        # Add combinations of primary entity with secondary entities
-        for sec_entity in secondary_entities[:2]:  # Limit to top 2 secondary entities
-            if len(search_terms) < 5:
-                if primary_entity and sec_entity != primary_entity:
-                    search_terms.append(f"{primary_entity} {sec_entity}")
-                else:
-                    search_terms.append(sec_entity)
-        
-        # Add specific search for beetle abdomen or anatomical parts for biology
-        if category == "biology" and "beetle" in text.lower():
-            anatomical_terms = ["abdomen", "thorax", "head", "wing", "antenna", 
-                               "elytra", "leg", "ovipositor", "reproductive"]
-            
-            for term in anatomical_terms:
-                if term in text.lower() and len(search_terms) < 5:
-                    search_terms.append(f"beetle {term}")
-                    break
+            combined_term = f"{primary_entity} {category}"
+            if combined_term not in search_terms:
+                search_terms.append(combined_term)
     
-    # If we don't have enough search terms yet, add key phrases or domain concepts
-    if len(search_terms) < 3:
-        # For biology, extract key phrases
-        if category == "biology":
-            key_phrases = extract_key_phrases(text)
-            for phrase in key_phrases[:2]:  # Limit to 2 phrases
-                if len(search_terms) < 5 and len(phrase) < 30:  # Reasonable length 
-                    # Check that phrase doesn't start with problematic terms
-                    if not any(phrase.lower().startswith(term) for term in problematic_terms):
-                        search_terms.append(phrase)
-        else:
-            # For non-biology, add domain-specific concept phrases
-            domain_concepts = get_domain_concepts(category)
-            
-            # Extract features for common word identification
-            features = extract_features(text)
-            common_words = features["word_freq"].most_common(10)
-            
-            # Filter to ensure we don't use problematic terms
-            meaningful_words = [word for word, _ in common_words 
-                              if len(word) > 3 
-                              and word.lower() not in problematic_terms]
-            
-            # Combine top meaningful word with domain concept
-            if meaningful_words and domain_concepts:
-                for concept in domain_concepts[:2]:
-                    if len(search_terms) < 5:
-                        search_terms.append(f"{meaningful_words[0]} {concept}")
-    
-    # If we still have no terms after all our checks, use the category
-    if not search_terms and category != "general":
-        # Add some domain-specific fallback terms
-        if category == "biology" and "beetle" in text.lower():
+    # 5. ADD WIKIPEDIA SEARCH TERMS
+    # For biology or if we detect Latin names, add Wikipedia search
+    if category == "biology" or scientific_names:
+        if "beetle" in text.lower() and "beetle biology" not in search_terms:
             search_terms.append("beetle biology")
-            search_terms.append("insect anatomy")
-        else:
-            search_terms.append(category)
+        
+        if scientific_names and f"{scientific_names[0]} wikipedia" not in search_terms:
+            search_terms.append(f"{scientific_names[0]} wikipedia")
     
-    # Do a final filter to ensure we don't have problematic terms
+    # 6. FALLBACK: If we somehow have no terms, add generic ones for the category
+    if not search_terms:
+        if category == "biology":
+            if "beetle" in text.lower():
+                search_terms = ["beetle biology", "insect anatomy"]
+            else:
+                search_terms = ["biology", "species classification"]
+        else:
+            search_terms = [category, f"{category} research"]
+    
+    # 7. FINAL FILTERING: Remove any remaining problematic terms
     filtered_search_terms = []
     for term in search_terms:
-        if not any(term.lower() == pt.lower() for pt in problematic_terms) and term.lower() not in problematic_terms:
-            filtered_search_terms.append(term)
+        # Skip terms that match problematic terms exactly
+        if term.lower() in [p.lower() for p in problematic_terms]:
+            continue
+            
+        # Skip terms that start with problematic prefixes
+        if any(term.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"]):
+            continue
+            
+        # The term passed all filters
+        filtered_search_terms.append(term)
     
     # If we filtered too aggressively and have no terms, add a safe fallback
     if not filtered_search_terms:
         filtered_search_terms = [category]
     
-    # Remove duplicates and limit to max 5 search terms
-    # Convert to lowercase for easier comparison
+    # 8. Remove duplicates while preserving order
     unique_terms = []
     for term in filtered_search_terms:
         term_lower = term.lower()
         if not any(term_lower == t.lower() for t in unique_terms):
             unique_terms.append(term)
     
+    # Limit to 5 most relevant search terms
     return unique_terms[:5]
 
 def get_primary_entity(entities, category):
