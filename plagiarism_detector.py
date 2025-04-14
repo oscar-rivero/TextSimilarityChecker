@@ -408,8 +408,8 @@ def check_plagiarism(text):
         if query not in search_queries:
             search_queries.append(query)
     
-    # Ensure we don't exceed 5 queries total
-    search_queries = search_queries[:5]
+    # Increased from 5 to 15 queries total to allow for more comprehensive searching
+    search_queries = search_queries[:15]
     
     # Log the filtered queries
     logger.info(f"Final filtered search queries: {search_queries}")

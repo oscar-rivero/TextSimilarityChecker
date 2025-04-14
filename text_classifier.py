@@ -1463,8 +1463,8 @@ def generate_search_terms(category, text):
         if not any(term_lower == t.lower() for t in unique_terms):
             unique_terms.append(term)
     
-    # Limit to 5 most relevant search terms
-    return unique_terms[:5]
+    # Increased limit from 5 to 15 search terms for more comprehensive search
+    return unique_terms[:15]
 
 def get_primary_entity(entities, category):
     """
