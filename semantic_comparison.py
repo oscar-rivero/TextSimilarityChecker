@@ -404,10 +404,124 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
         logger.error(f"Error finding semantic matching phrases: {str(e)}")
         return []
 
+def compare_text_with_paragraphs(input_text, source_html_text, min_paragraph_length=100):
+    """
+    Compare input text with each paragraph of the source HTML.
+    
+    This function is based on the buscar_para() function from 
+    https://github.com/oscar-rivero/plagiarism-detection-prototype-1/blob/master/modulo_comparador.py
+    
+    Parameters:
+    - input_text: The original text to check for plagiarism
+    - source_html_text: The HTML content from a relevant source
+    - min_paragraph_length: Minimum character length for paragraphs to consider
+    
+    Returns:
+    - Dictionary with similarity score and matched paragraphs
+    """
+    try:
+        if not source_html_text or not input_text:
+            return {
+                'overall_similarity': 0,
+                'paragraph_matches': []
+            }
+        
+        # Basic sanitization to extract text from HTML
+        # Look for paragraphs (text between tags, line breaks, etc.)
+        import re
+        
+        try:
+            # Try to handle as plain text with basic cleanup
+            # Remove HTML tags if they exist
+            clean_source = re.sub(r'<[^>]*>', ' ', source_html_text)
+            # Remove extra whitespace
+            clean_source = re.sub(r'\s+', ' ', clean_source)
+        except Exception as e:
+            logger.warning(f"HTML cleaning failed: {e}, using raw text")
+            # Use the original text as fallback
+            clean_source = source_html_text
+        
+        # Split into paragraphs - look for common paragraph delimiters
+        # 1. Double line breaks
+        # 2. HTML paragraph markers (even if tags were removed)
+        # 3. Sentence breaks followed by space characters
+        paragraphs = re.split(r'\n\s*\n|\.\s+(?=[A-Z])', clean_source)
+        
+        # Filter out too short paragraphs and normalize whitespace
+        paragraphs = [p.strip() for p in paragraphs if p and p.strip()]
+        paragraphs = [re.sub(r'\s+', ' ', p) for p in paragraphs if len(p) >= min_paragraph_length]
+        
+        # Get the lemmatized input text
+        input_lemmas = lemmatize_text(input_text)
+        
+        paragraph_matches = []
+        max_similarity = 0
+        
+        for i, paragraph in enumerate(paragraphs):
+            # Skip empty or too short paragraphs
+            if not paragraph or len(paragraph) < min_paragraph_length:
+                continue
+                
+            # Calculate both direct and semantic similarity
+            para_lemmas = lemmatize_text(paragraph)
+            
+            # Direct text similarity using SequenceMatcher
+            direct_similarity = SequenceMatcher(None, input_text.lower(), paragraph.lower()).ratio()
+            
+            # Semantic similarity using our algorithm
+            semantic_similarity, matching_pairs = calculate_semantic_similarity(input_text, paragraph)
+            
+            # Combine similarities - weigh direct matches higher
+            combined_similarity = (direct_similarity * 0.7) + (semantic_similarity * 0.3)
+            
+            if combined_similarity > 0.15:  # Only track significant matches
+                paragraph_matches.append({
+                    'paragraph_index': i,
+                    'paragraph_text': paragraph,
+                    'direct_similarity': direct_similarity * 100,  # Convert to percentage
+                    'semantic_similarity': semantic_similarity,  # Already a percentage
+                    'combined_similarity': combined_similarity * 100,  # Convert to percentage
+                    'semantic_matches': matching_pairs
+                })
+                
+                # Keep track of maximum similarity across paragraphs
+                if combined_similarity > max_similarity:
+                    max_similarity = combined_similarity
+        
+        # Sort matches by combined similarity
+        paragraph_matches.sort(key=lambda x: x['combined_similarity'], reverse=True)
+        
+        # Calculate overall document similarity - weighted by paragraph length
+        total_length = sum(len(p['paragraph_text']) for p in paragraph_matches) if paragraph_matches else 1
+        weighted_similarity = sum(p['combined_similarity'] * len(p['paragraph_text']) / total_length 
+                                for p in paragraph_matches) if paragraph_matches else 0
+        
+        # Boost similarity if multiple paragraphs match
+        paragraph_count_boost = min(1.0, len(paragraph_matches) / 5) * 0.3
+        overall_similarity = (max_similarity * 0.7) + (weighted_similarity * 0.3) + paragraph_count_boost
+        
+        # Cap at 100%
+        overall_similarity = min(1.0, overall_similarity) * 100
+        
+        return {
+            'overall_similarity': overall_similarity,
+            'paragraph_matches': paragraph_matches[:5]  # Limit to top 5 matches
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in paragraph comparison: {str(e)}")
+        return {
+            'overall_similarity': 0,
+            'paragraph_matches': []
+        }
+
 def check_semantic_plagiarism(original_text, source_texts):
     """
     Check for semantic plagiarism between the original text and a list of source texts
     Returns a list of results with similarity scores and matching phrases
+    
+    Now includes paragraph-level comparison for more precise detection
+    based on techniques from https://github.com/oscar-rivero/plagiarism-detection-prototype-1
     """
     results = []
     
@@ -424,23 +538,57 @@ def check_semantic_plagiarism(original_text, source_texts):
             url = source.get("url", "#")
             snippet = source.get("snippet", "")
             
+            # We'll determine if this is a Wikipedia article based on URL
+            is_wikipedia = "wikipedia.org" in url.lower()
+            # Get categories for this source
+            categories = source.get("categories", [])
+            # Convert to list if it's a string
+            if isinstance(categories, str):
+                categories = [categories]
+            # Get relevance score
+            relevance_score = source.get("relevance_score", 0)
+            
             try:
-                # Calculate similarity score
+                # Calculate overall semantic similarity score
                 similarity, semantic_matches = calculate_semantic_similarity(original_text, source_content)
                 
                 # Find matching phrases
                 matching_phrases = find_semantic_matching_phrases(original_text, source_content)
                 
-                if similarity > 10 or matching_phrases:  # Lower threshold for semantic comparison
+                # New: Perform the paragraph-level comparison
+                paragraph_comparison = compare_text_with_paragraphs(original_text, source_content)
+                paragraph_similarity = paragraph_comparison['overall_similarity']
+                paragraph_matches = paragraph_comparison['paragraph_matches']
+                
+                # Use the maximum similarity score between methods
+                # Weight paragraph comparison higher for historical/academic content
+                final_similarity = similarity
+                if "history" in categories or "literature" in categories or "education" in categories:
+                    # For historical or academic content, paragraph comparison is more relevant
+                    final_similarity = max(similarity, paragraph_similarity * 1.2)
+                else:
+                    # For other content, use the higher of the two methods
+                    final_similarity = max(similarity, paragraph_similarity)
+                
+                # Boost Wikipedia sources for exact topic matches
+                if is_wikipedia and relevance_score > 1.0:
+                    # Boost Wikipedia articles that are very relevant
+                    final_similarity *= 1.3
+                
+                if final_similarity > 10 or matching_phrases or paragraph_matches:  # Lower threshold for comparison
                     result = {
                         "source": {
                             "title": title,
                             "url": url,
-                            "snippet": snippet
+                            "snippet": snippet,
+                            "is_wikipedia": is_wikipedia,
+                            "categories": categories,
+                            "relevance_score": relevance_score
                         },
-                        "similarity": similarity,
+                        "similarity": final_similarity,
                         "matches": matching_phrases,
-                        "semantic_matches": semantic_matches
+                        "semantic_matches": semantic_matches,
+                        "paragraph_matches": paragraph_matches
                     }
                     results.append(result)
             except ValueError as e:
@@ -456,7 +604,28 @@ def check_semantic_plagiarism(original_text, source_texts):
         except Exception as e:
             logger.error(f"Error accessing source data: {str(e)}")
     
-    # Sort results by similarity (descending)
-    results.sort(key=lambda x: x["similarity"], reverse=True)
+    # New improved sorting - give more weight to Wikipedia articles and high relevance sources
+    # This is critical for ensuring the most relevant results appear first
+    def source_ranking_score(result):
+        # Start with the similarity score
+        score = result["similarity"]
+        
+        # Boost Wikipedia sources
+        if result["source"].get("is_wikipedia", False):
+            score *= 1.5
+        
+        # Boost sources with high relevance scores
+        relevance = result["source"].get("relevance_score", 0)
+        if relevance > 1.0:
+            score *= (1 + (relevance - 1) * 0.3)
+            
+        # Boost sources with paragraph matches
+        if result.get("paragraph_matches") and len(result["paragraph_matches"]) > 0:
+            score *= (1 + min(len(result["paragraph_matches"]), 5) * 0.1)
+            
+        return score
+    
+    # Sort results by our custom ranking score
+    results.sort(key=source_ranking_score, reverse=True)
     
     return results
