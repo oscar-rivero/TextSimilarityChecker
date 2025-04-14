@@ -339,28 +339,49 @@ def check_semantic_plagiarism(original_text, source_texts):
     results = []
     
     for source in source_texts:
-        source_content = source.get("content", "")
-        if not source_content:
-            continue
+        try:
+            # Skip sources without content
+            source_content = source.get("content", "")
+            if not source_content or len(source_content.strip()) < 50:
+                logger.warning(f"Skipping source with insufficient content: {source.get('url', 'unknown')}")
+                continue
+                
+            # Get needed fields with defaults
+            title = source.get("title", "Untitled Source")
+            url = source.get("url", "#")
+            snippet = source.get("snippet", "")
             
-        # Calculate similarity score
-        similarity, semantic_matches = calculate_semantic_similarity(original_text, source_content)
-        
-        # Find matching phrases
-        matching_phrases = find_semantic_matching_phrases(original_text, source_content)
-        
-        if similarity > 10 or matching_phrases:  # Lower threshold for semantic comparison
-            result = {
-                "source": {
-                    "title": source.get("title", "Untitled"),
-                    "url": source.get("url", ""),
-                    "snippet": source.get("snippet", "")
-                },
-                "similarity": similarity,
-                "matches": matching_phrases,
-                "semantic_matches": semantic_matches
-            }
-            results.append(result)
+            try:
+                # Calculate similarity score
+                similarity, semantic_matches = calculate_semantic_similarity(original_text, source_content)
+                
+                # Find matching phrases
+                matching_phrases = find_semantic_matching_phrases(original_text, source_content)
+                
+                if similarity > 10 or matching_phrases:  # Lower threshold for semantic comparison
+                    result = {
+                        "source": {
+                            "title": title,
+                            "url": url,
+                            "snippet": snippet
+                        },
+                        "similarity": similarity,
+                        "matches": matching_phrases,
+                        "semantic_matches": semantic_matches
+                    }
+                    results.append(result)
+            except ValueError as e:
+                logger.error(f"Value error in semantic comparison for {url}: {str(e)}")
+                continue
+            except TypeError as e:
+                logger.error(f"Type error in semantic comparison for {url}: {str(e)}")
+                continue
+            except Exception as e:
+                logger.error(f"Error processing source {url}: {str(e)}")
+                continue
+                
+        except Exception as e:
+            logger.error(f"Error accessing source data: {str(e)}")
     
     # Sort results by similarity (descending)
     results.sort(key=lambda x: x["similarity"], reverse=True)
