@@ -161,6 +161,9 @@ def check_plagiarism(text):
                 # Calculate similarity
                 similarity = calculate_similarity(processed_text, processed_source)
                 
+                # Convert similarity to percentage (0-100 scale instead of 0-1)
+                similarity_percent = similarity * 100
+                
                 # Find matching phrases
                 matches = find_matching_phrases(text, source_content)
                 
@@ -172,7 +175,7 @@ def check_plagiarism(text):
                             "url": source_url,
                             "snippet": result["snippet"]
                         },
-                        "similarity": similarity,
+                        "similarity": similarity_percent,
                         "matches": matches
                     })
             except Exception as e:

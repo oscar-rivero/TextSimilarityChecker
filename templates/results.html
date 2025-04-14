@@ -33,16 +33,20 @@
                                 <p class="mb-1">
                                     <strong>Average Similarity:</strong>
                                     {% if results|length > 0 %}
-                                        {% with total_similarity=0 %}
-                                            {% for result in results %}
-                                                {% with total_similarity=total_similarity|add:result.similarity %}
-                                                    {% if forloop.last %}
-                                                        {% with avg_similarity=total_similarity|floatformat:4|stringformat:'s'|slice:'2:' %}
-                                                            {{ avg_similarity }}%
+                                        {% with count=results|length %}
+                                            {% with avg=0 %}
+                                                {% for result in results %}
+                                                    {% with sim=result.similarity|floatformat:4 %}
+                                                        {% with avg=avg|add:sim|floatformat:4 %}
+                                                            {% if forloop.last %}
+                                                                {% with final_avg=avg|floatformat:2 %}
+                                                                    {{ final_avg }}%
+                                                                {% endwith %}
+                                                            {% endif %}
                                                         {% endwith %}
-                                                    {% endif %}
-                                                {% endwith %}
-                                            {% endfor %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            {% endwith %}
                                         {% endwith %}
                                     {% else %}
                                         0.00%
@@ -100,7 +104,7 @@
                                             <i class="fas fa-external-link-alt ms-1 small"></i>
                                         </a>
                                     </h3>
-                                    <span class="badge {% if result.similarity > 0.5 %}similarity-high{% elif result.similarity > 0.3 %}similarity-medium{% else %}similarity-low{% endif %} similarity-badge">
+                                    <span class="badge {% if result.similarity > 50 %}similarity-high{% elif result.similarity > 30 %}similarity-medium{% else %}similarity-low{% endif %} similarity-badge">
                                         {{ result.similarity|floatformat:2 }}% Similar
                                     </span>
                                 </div>

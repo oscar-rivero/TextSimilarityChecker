@@ -60,7 +60,7 @@ function createReportText(data) {
     reportText += "SUMMARY:\n";
     reportText += "--------\n";
     reportText += "Sources Found: " + data.sources_count + "\n";
-    reportText += "Average Similarity: " + data.average_similarity.toFixed(2) + "%\n";
+    reportText += "Average Similarity: " + parseFloat(data.average_similarity).toFixed(2) + "%\n";
     reportText += "Total Matching Phrases: " + data.total_matches + "\n\n";
     
     // Sources section
@@ -73,7 +73,7 @@ function createReportText(data) {
         data.sources.forEach((source, index) => {
             reportText += (index + 1) + ". " + source.title + "\n";
             reportText += "   URL: " + source.url + "\n";
-            reportText += "   Similarity: " + (source.similarity * 100).toFixed(2) + "%\n";
+            reportText += "   Similarity: " + parseFloat(source.similarity).toFixed(2) + "%\n";
             reportText += "   Matching Phrases: " + source.matches.length + "\n\n";
             
             // List matching phrases
@@ -133,13 +133,13 @@ function initializeCharts() {
         
         const values = data.map(item => {
             const similarity = parseFloat(item.similarity) || 0;
-            return (similarity * 100).toFixed(2);
+            return similarity.toFixed(2);
         });
         
         const backgroundColors = data.map(item => {
             const similarity = parseFloat(item.similarity) || 0;
-            if (similarity > 0.5) return '#dc3545'; // high
-            if (similarity > 0.3) return '#fd7e14'; // medium
+            if (similarity > 50) return '#dc3545'; // high
+            if (similarity > 30) return '#fd7e14'; // medium
             return '#28a745'; // low
         });
         
