@@ -1088,27 +1088,165 @@ def extract_literary_entities(text):
     return entities
 
 def extract_key_phrases(text):
-    """Extract key phrases that might be important for searching."""
-    phrases = []
+    """
+    Extract key phrases using POS tagging to identify linguistically meaningful structures.
+    This addresses the need to extract proper noun phrases, verb phrases, etc., 
+    without relying on simple filters or stopword lists.
+    """
+    # Clean the text first - remove punctuation that's not part of words
+    clean_text = re.sub(r'[^\w\s-]', ' ', text)
     
-    # Look for phrases that describe characteristics
+    # Get stopwords to filter out unimportant words
+    stop_words = set(stopwords.words('english'))
+    
+    # Tokenize and tag parts of speech
+    tokens = word_tokenize(clean_text)
+    tagged = nltk.pos_tag(tokens)
+    
+    # Store all meaningful phrases we extract
+    all_phrases = []
+    
+    # 1. Extract noun phrases (NP)
+    # Pattern: (Optional determiner) + (Optional adjectives) + (One or more nouns)
+    i = 0
+    while i < len(tagged):
+        # Skip determiners (we don't want "the beetle", just "beetle")
+        if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
+            i += 1
+            continue
+            
+        # Start collecting a potential noun phrase
+        phrase_tokens = []
+        original_i = i
+        has_noun = False
+        
+        # Look for adjectives followed by nouns
+        while i < len(tagged):
+            # Adjectives (JJ, JJR, JJS)
+            if tagged[i][1].startswith('JJ'):
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                i += 1
+            # Nouns (NN, NNS, NNP, NNPS)
+            elif tagged[i][1].startswith('NN'):
+                has_noun = True
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                i += 1
+            # Break if not an adjective or noun
+            else:
+                break
+        
+        # Only add phrases that have at least one noun and aren't stopwords
+        if has_noun and phrase_tokens:
+            # Filter out single-word phrases that are too common/generic
+            phrase = " ".join(phrase_tokens)
+            if len(phrase_tokens) > 1 or phrase.lower() not in ['beetle', 'young', 'adult', 'larva', 'pupa']:
+                all_phrases.append(phrase)
+        
+        # Ensure we always make progress
+        if i == original_i:
+            i += 1
+    
+    # 2. Extract verb phrases (VP)
+    # Pattern: Verb + (Optional objects or complements)
+    i = 0
+    while i < len(tagged):
+        # Look for verbs
+        if tagged[i][1].startswith('VB'):
+            verb = tagged[i][0]
+            # Skip common auxiliary verbs
+            if verb.lower() in ['is', 'are', 'was', 'were', 'be', 'been', 'being',
+                               'have', 'has', 'had', 'do', 'does', 'did']:
+                i += 1
+                continue
+                
+            phrase_tokens = [verb]
+            i += 1
+            
+            # Look for objects (nouns or noun phrases)
+            # Skip determiners
+            if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
+                i += 1
+                
+            # Collect object (adjectives + nouns)
+            has_content = False
+            while i < len(tagged) and (tagged[i][1].startswith('JJ') or tagged[i][1].startswith('NN')):
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                    has_content = True
+                i += 1
+                
+            if has_content:
+                all_phrases.append(" ".join(phrase_tokens))
+        else:
+            i += 1
+    
+    # 3. Extract prepositional phrases (PP)
+    # Pattern: Preposition + Noun Phrase
+    i = 0
+    while i < len(tagged):
+        # Look for prepositions
+        if tagged[i][1] == 'IN':
+            prep = tagged[i][0]
+            # Skip certain prepositions that aren't meaningful on their own
+            if prep.lower() in ['of', 'on', 'in', 'at', 'by', 'for', 'with']:
+                i += 1
+                continue
+                
+            phrase_tokens = [prep]
+            i += 1
+            
+            # Skip determiners
+            if i < len(tagged) and tagged[i][1] in ['DT', 'PRP$']:
+                i += 1
+                
+            # Collect noun phrase
+            has_content = False
+            while i < len(tagged) and (tagged[i][1].startswith('JJ') or tagged[i][1].startswith('NN')):
+                if tagged[i][0].lower() not in stop_words:
+                    phrase_tokens.append(tagged[i][0])
+                    has_content = True
+                i += 1
+                
+            if has_content:
+                all_phrases.append(" ".join(phrase_tokens))
+        else:
+            i += 1
+    
+    # 4. Additionally, look for specific patterns important for domain analysis
     patterns = [
-        r'([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)',  # Size descriptions
-        r'(green|yellow|brown|black|red|orange|blue|purple|white|grey|gray)\s+(?:in\s+)?colou?r',  # Color descriptions
-        r'([a-z]+)\s+(?:in\s+)?appearance',  # Appearance descriptions
-        r'(?:feeds|feeding)\s+on\s+([a-z\s]+)',  # Feeding habits
-        r'(?:live|lives|found)\s+(?:in|on)\s+([a-z\s]+)',  # Habitat descriptions
-        r'(?:during|in)\s+(?:its|the)\s+([a-z]+\s+[a-z]+)'  # Life cycle phases
+        # Measurements
+        r'([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)',
+        # Colors
+        r'(green|yellow|brown|black|red|orange|blue|purple|white|grey|gray)\s+(?:in\s+)?colou?r(?:ation)?',
+        # Physical characteristics
+        r'([a-z]+)\s+appearance',
+        # Habitat
+        r'(?:inhabits|found in|lives in)\s+([a-z\s]+)',
+        # Behaviors
+        r'(?:feeds on|eats|consumes)\s+([a-z\s]+)'
     ]
     
     for pattern in patterns:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
             phrase = match.group(0).lower()
-            if phrase and len(phrase) > 5:  # Reasonable length for a phrase
-                phrases.append(phrase)
+            if phrase and phrase not in [p.lower() for p in all_phrases]:
+                all_phrases.append(phrase)
     
-    return phrases
+    # Filter out phrases that are too short
+    filtered_phrases = [phrase for phrase in all_phrases if len(phrase) > 3]
+    
+    # Make sure all phrases have at least one non-stopword
+    result_phrases = []
+    for phrase in filtered_phrases:
+        words = phrase.split()
+        non_stop_words = [word for word in words if word.lower() not in stop_words]
+        if non_stop_words:
+            result_phrases.append(phrase)
+    
+    return result_phrases
 
 def generate_search_terms(category, text):
     """Generate targeted search terms based on the identified category and text content."""
