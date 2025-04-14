@@ -23,6 +23,20 @@ except LookupError:
 
 # Dictionary of categories with their associated keywords (enhanced with Wikipedia categories)
 CATEGORY_KEYWORDS = {
+    "colors": [
+        # Color names
+        "green", "red", "blue", "yellow", "purple", "orange", "pink", "brown", "black", "white",
+        "cyan", "magenta", "turquoise", "indigo", "violet", "burgundy", "crimson", "teal", 
+        # Color terminology
+        "hue", "shade", "tint", "saturation", "brightness", "luminosity", "chroma", "palette",
+        "primary color", "secondary color", "tertiary color", "complementary color", "color wheel",
+        "pastel", "neon", "neutral", "color theory", "color psychology", "color scheme",
+        # Color systems
+        "rgb", "cmyk", "hsl", "hsv", "pantone", "hex color", "color code", "color model",
+        # Art and design related
+        "paint color", "pigment", "dye", "colorant", "color matching", "color mixing",
+        "color chart", "color gradient", "color spectrum", "color family", "color swatch"
+    ],
     "biology": [
         # Core biology terms
         "species", "organism", "biology", "cell", "dna", "animal", "plant", "genus", 
@@ -233,7 +247,7 @@ def classify_source_text(source_text):
         # Return a generic classification for error cases
         return {"general": 1.0, "academic": 0.5, "information": 0.3}
 
-def is_source_relevant(input_categories, source_categories, threshold=0.4):
+def is_source_relevant(input_categories, source_categories, threshold=0.7, source_url=None):
     """
     Determine if a source is relevant based on category matching.
     
@@ -241,6 +255,7 @@ def is_source_relevant(input_categories, source_categories, threshold=0.4):
         input_categories: Dictionary of categories and scores for the input text
         source_categories: Dictionary of categories and scores for the source text
         threshold: Minimum relevance score to consider the source relevant
+        source_url: Optional URL of the source, used for additional filtering
         
     Returns:
         Boolean indicating if the source is relevant to the input text
@@ -256,21 +271,49 @@ def is_source_relevant(input_categories, source_categories, threshold=0.4):
     # Calculate relevance score
     relevance_score = 0.0
     
-    # If the top category matches, high relevance
-    if source_top_category_names[0] in top_input_category_names:
+    # Most important: primary category must match (this ensures strong domain relevance)
+    if source_top_category_names and top_input_category_names and source_top_category_names[0] == top_input_category_names[0]:
         relevance_score += 0.7
+    elif not source_top_category_names or not top_input_category_names:
+        # If we don't have categories, this is a problem
+        logger.warning(f"Missing categories - Input: {top_input_category_names}, Source: {source_top_category_names}")
+        return False
     
-    # If any of the top 3 source categories match input's top 2 categories
-    for cat in source_top_category_names:
-        if cat in top_input_category_names:
-            relevance_score += 0.3
-            break
+    # Special case for "Shades of green" and other color pages - explicitly reject them
+    # This handles the issue with the example text about green beetles matching color pages
+    if "colors" in source_top_category_names[:2] or any("color" in cat.lower() for cat in source_top_category_names[:2]):
+        if "biology" in top_input_category_names:
+            logger.info(f"Explicitly rejecting color-related source when input is about biology")
+            return False
+            
+    # Special detection for URL patterns that indicate color pages when the text is about biology
+    if "biology" in top_input_category_names and source_url and (
+        "shades_of_" in source_url.lower() or 
+        "/color" in source_url.lower() or 
+        "/colours" in source_url.lower() or
+        "rgb_" in source_url.lower()
+    ):
+        logger.info(f"Explicitly rejecting URL with color-related patterns: {source_url}")
+        return False
     
-    # Consider keyword overlap for additional relevance
-    shared_keywords = sum(min(input_categories.get(cat, 0), source_categories.get(cat, 0)) 
-                         for cat in set(input_categories) & set(source_categories))
-    relevance_score += shared_keywords * 0.1
+    # If any of the source's top 2 categories match input's top 2 categories
+    common_categories = set(source_top_category_names[:2]) & set(top_input_category_names)
+    if common_categories:
+        relevance_score += 0.3 * len(common_categories)
     
+    # If the source doesn't have the same primary category as the input, 
+    # it needs strong secondary matches to be considered relevant
+    if source_top_category_names[0] != top_input_category_names[0]:
+        # Need at least one matching category in their top categories
+        if not common_categories:
+            logger.debug(f"Source primary category doesn't match and no common categories")
+            return False
+    
+    # Special handling for "general" category - don't allow very generic sources
+    if source_top_category_names[0] == "general" and top_input_category_names[0] != "general":
+        logger.debug(f"Rejecting generic source for specific input category")
+        return False
+        
     logger.debug(f"Source relevance score: {relevance_score}, Input categories: {top_input_category_names}, "
                 f"Source categories: {source_top_category_names}")
     
@@ -297,13 +340,52 @@ def _calculate_category_scores(word_freq, tokens, original_text):
             r'pupa[el]?',
             r'insect species',
             r'beetle',
-            r'arthropod'
+            r'arthropod',
+            r'oviduct',
+            r'testes',
+            r'reproductive',
+            r'abdomen',
+            r'thorax',
+            r'antenna'
         ]
         
         for pattern in biology_patterns:
             if re.search(pattern, original_text, re.IGNORECASE):
                 # If we find a strong biology pattern, give it a big boost
                 category_scores["biology"] = category_scores.get("biology", 0) + 5
+                
+        # Color-specific patterns for detecting color-centric documents
+        color_patterns = [
+            r'shade[s]? of \w+',  # Shades of green/blue/etc
+            r'color wheel',
+            r'rgb',
+            r'cmyk',
+            r'hex code',
+            r'primary color',
+            r'secondary color',
+            r'color theory',
+            r'color psychology',
+            r'color scheme',
+            r'rgb values',
+            r'color model',
+            r'pantone',
+            r'color family'
+        ]
+        
+        for pattern in color_patterns:
+            if re.search(pattern, original_text, re.IGNORECASE):
+                # If we find a strong color pattern, give it a big boost
+                category_scores["colors"] = category_scores.get("colors", 0) + 5
+                
+        # Special case: if we detect insect anatomy terminology BUT also color terminology,
+        # strongly favor biology over colors for the green beetle example
+        if "beetle" in original_text.lower() and any(term in original_text.lower() for term in ["abdomen", "thorax", "oviduct", "testes", "reproductive"]):
+            if re.search(r'green|yellow|color', original_text, re.IGNORECASE):
+                # This is likely about beetle biology that mentions color, not about color itself
+                category_scores["biology"] = category_scores.get("biology", 0) + 8
+                # Decrease any color category score
+                if "colors" in category_scores:
+                    category_scores["colors"] = max(0, category_scores["colors"] - 5)
         
         # Calculate keyword-based scores for all categories
         for category, keywords in CATEGORY_KEYWORDS.items():

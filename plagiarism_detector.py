@@ -511,7 +511,7 @@ def check_plagiarism(text):
                 source_categories = text_classifier.classify_source_text(source_content)
                 
                 # Check if source is relevant to input text's top categories
-                is_relevant = text_classifier.is_source_relevant(input_categories, source_categories)
+                is_relevant = text_classifier.is_source_relevant(input_categories, source_categories, source_url=source_url)
                 
                 if not is_relevant:
                     logger.info(f"Discarding irrelevant source: {source_url}")
