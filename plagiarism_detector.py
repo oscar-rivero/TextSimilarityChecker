@@ -133,11 +133,23 @@ def search_online(query, num_results=5):
             return [{"title": "JSON Parsing Error", "link": "#", "snippet": f"Error: {str(e)}"}]
         
         except requests.RequestException as e:
-            logger.error(f"HTTP error from SerpAPI: {str(e)}")
-            # Return special results if available, or error message
+            error_message = str(e)
+            logger.error(f"HTTP error from SerpAPI: {error_message}")
+            
+            # Check specifically for rate limit errors (429 Too Many Requests)
+            if "429" in error_message:
+                logger.warning("Rate limit exceeded for SerpAPI. Using previously found results or informing user.")
+                # Return a more user-friendly message for rate limits
+                if special_results:
+                    return special_results
+                return [{"title": "Search API Rate Limit Reached", 
+                       "link": "#", 
+                       "snippet": "The search service is temporarily unavailable due to rate limiting. Please try again in a few minutes or with a different search term."}]
+            
+            # Handle other HTTP errors
             if special_results:
                 return special_results
-            return [{"title": "Search API HTTP Error", "link": "#", "snippet": f"Error: {str(e)}"}]
+            return [{"title": "Search API HTTP Error", "link": "#", "snippet": f"Error: {error_message}"}]
     
     except Exception as e:
         logger.error(f"Unexpected error in search_online: {str(e)}")
@@ -454,16 +466,25 @@ def check_plagiarism(text):
     
     # For each query, search online and compare results
     for query in search_queries:
-        # Search online with increased number of results
-        search_results = search_online(query, num_results=20)
-        
+        try:
+            # Search online with increased number of results
+            search_results = search_online(query, num_results=20)
+            
+            # Skip to next query if we're hitting rate limits
+            if search_results and len(search_results) == 1 and "Rate Limit" in search_results[0].get("title", ""):
+                logger.warning(f"Rate limit detected for query '{query}'. Skipping to next query.")
+                continue
+        except Exception as e:
+            logger.error(f"Error searching for query '{query}': {str(e)}")
+            continue  # Skip to next query on error
+            
         for result in search_results:
             try:
                 # Get content from the webpage
                 source_url = result["link"]
                 if source_url == "#":  # Skip placeholder URLs
                     continue
-                    
+                
                 source_content = get_website_text_content(source_url)
                 
                 if not source_content:

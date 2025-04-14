@@ -44,8 +44,16 @@ def check():
                               report_data=report_data)
     
     except Exception as e:
-        logger.error(f"Error during plagiarism check: {str(e)}")
-        return render_template('index.html', error=f"An error occurred: {str(e)}")
+        error_message = str(e)
+        logger.error(f"Error during plagiarism check: {error_message}")
+        
+        # Provide a more user-friendly message for rate limit errors
+        if "429" in error_message or "rate limit" in error_message.lower():
+            error_msg = "The search service is currently experiencing high traffic. Please try again in a few minutes or with different text."
+        else:
+            error_msg = f"An error occurred during the plagiarism check. Please try again."
+            
+        return render_template('index.html', error=error_msg)
 
 @app.route('/report', methods=['GET'])
 def report():
