@@ -472,6 +472,19 @@ def check_plagiarism(text):
     results = []
     source_texts = []  # Store source texts for semantic comparison
     
+    # Get classification categories for input text to use for source filtering
+    input_categories = classification_result.get("all_scores", {})
+    if not input_categories:
+        logger.warning("Classification result does not contain category scores, creating fallback")
+        # Create a dictionary from top_categories list
+        input_categories = {cat: score for cat, score in classification_result.get("top_categories", [])}
+        
+    if not input_categories:
+        logger.warning("Could not create input categories for filtering, using defaults")
+        input_categories = {classification_result.get("primary_category", "general"): 1.0, "academic": 0.5}
+    
+    logger.info(f"Using input categories for source filtering: {input_categories}")
+    
     # For each query, search online and compare results
     for query in search_queries:
         # Search online with increased number of results
@@ -489,18 +502,28 @@ def check_plagiarism(text):
                 if not source_content:
                     continue
                 
-                # Store source text for semantic comparison
+                # Skip empty content
+                if not source_content or len(source_content.strip()) < 50:
+                    logger.warning(f"Source content too short or empty from {source_url}")
+                    continue
+                
+                # Classify source content to determine relevance
+                source_categories = text_classifier.classify_source_text(source_content)
+                
+                # Check if source is relevant to input text's top categories
+                is_relevant = text_classifier.is_source_relevant(input_categories, source_categories)
+                
+                if not is_relevant:
+                    logger.info(f"Discarding irrelevant source: {source_url}")
+                    continue
+                
+                # Source is relevant, store for semantic comparison
                 source_texts.append({
                     "content": source_content,
                     "title": result["title"],
                     "url": source_url,
                     "snippet": result["snippet"]
                 })
-                
-                # Skip empty content
-                if not source_content or len(source_content.strip()) < 50:
-                    logger.warning(f"Source content too short or empty from {source_url}")
-                    continue
                 
                 try:
                     # Process source content
