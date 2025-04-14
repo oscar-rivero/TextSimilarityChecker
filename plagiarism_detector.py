@@ -143,8 +143,8 @@ def check_plagiarism(text):
     
     # For each query, search online and compare results
     for query in search_queries:
-        # Search online
-        search_results = search_online(query)
+        # Search online with increased number of results
+        search_results = search_online(query, num_results=20)
         
         for result in search_results:
             try:
