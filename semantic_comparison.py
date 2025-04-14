@@ -214,34 +214,54 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
         
         # Compare each sentence in text1 with each sentence in text2
         for sent1 in sentences1:
-            # Skip very short sentences
-            if len(sent1.split()) < min_length:
+            # Skip very short sentences or sentences without enough substance
+            word_count1 = len(sent1.split())
+            if word_count1 < min_length or len(sent1) < 20:
                 continue
                 
             # Get POS tags for the sentence
             tokens1 = word_tokenize(sent1.lower())
             pos_tags1 = nltk.pos_tag(tokens1)
             
+            # Check if the sentence has enough substantial words (4+ chars)
+            substantial_words = sum(1 for word in tokens1 if len(word) >= 4)
+            if substantial_words < 2:
+                continue
+            
             # Create dictionaries of different POS types
             nouns1 = [word.lower() for word, pos in pos_tags1 if pos.startswith('NN')]
             verbs1 = [word.lower() for word, pos in pos_tags1 if pos.startswith('VB')]
             adjs1 = [word.lower() for word, pos in pos_tags1 if pos.startswith('JJ')]
             
+            # Check if the sentence has enough meaningful parts of speech
+            if len(nouns1) == 0 or len(verbs1) == 0:
+                continue
+            
             # Lemmatize the words
             lemmas1 = lemmatize_text(sent1)
             
             for sent2 in sentences2:
-                if len(sent2.split()) < min_length:
+                word_count2 = len(sent2.split())
+                if word_count2 < min_length or len(sent2) < 20:
                     continue
                 
                 # Get POS tags for the second sentence
                 tokens2 = word_tokenize(sent2.lower())
                 pos_tags2 = nltk.pos_tag(tokens2)
                 
+                # Check if the sentence has enough substantial words
+                substantial_words2 = sum(1 for word in tokens2 if len(word) >= 4)
+                if substantial_words2 < 2:
+                    continue
+                
                 # Create dictionaries for the second sentence
                 nouns2 = [word.lower() for word, pos in pos_tags2 if pos.startswith('NN')]
                 verbs2 = [word.lower() for word, pos in pos_tags2 if pos.startswith('VB')]
                 adjs2 = [word.lower() for word, pos in pos_tags2 if pos.startswith('JJ')]
+                
+                # Check if the sentence has enough meaningful parts of speech
+                if len(nouns2) == 0 or len(verbs2) == 0:
+                    continue
                 
                 # Lemmatize the second sentence
                 lemmas2 = lemmatize_text(sent2)
@@ -249,12 +269,16 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                 # Direct word matches (important for establishing similarity)
                 direct_matches = set(lemmas1).intersection(set(lemmas2))
                 
+                # Skip if there aren't enough direct matches to be meaningful
+                if len(direct_matches) < 2:
+                    continue
+                
                 # Find semantic matches between specific POS types (nouns, verbs, adjectives)
                 semantic_matches = []
                 
-                # Check nouns against nouns
+                # Check nouns against nouns (focus on substantial nouns)
                 for noun1 in nouns1:
-                    if len(noun1) <= 2:
+                    if len(noun1) <= 3:  # Increased minimum length for nouns
                         continue
                         
                     synsets1 = wordnet.synsets(noun1, pos=wordnet.NOUN)
@@ -270,15 +294,15 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                     
                     # Check if any noun in the second text is a synonym
                     for noun2 in nouns2:
-                        if len(noun2) <= 2:
+                        if len(noun2) <= 3:  # Increased minimum length for nouns
                             continue
                             
                         if noun2 in synonyms1:
                             semantic_matches.append((noun1, noun2))
                 
-                # Check verbs against verbs
+                # Check verbs against verbs (focus on substantial verbs)
                 for verb1 in verbs1:
-                    if len(verb1) <= 2:
+                    if len(verb1) <= 3:  # Increased minimum length for verbs
                         continue
                         
                     synsets1 = wordnet.synsets(verb1, pos=wordnet.VERB)
@@ -294,7 +318,7 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                     
                     # Check if any verb in the second text is a synonym
                     for verb2 in verbs2:
-                        if len(verb2) <= 2:
+                        if len(verb2) <= 3:  # Increased minimum length for verbs
                             continue
                             
                         if verb2 in synonyms1:
@@ -313,19 +337,21 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                 similarity = (direct_match_ratio * 50) + (semantic_match_ratio * 30) + (noun_match_ratio * 10) + (verb_match_ratio * 10)
                 
                 # If similarity is high enough, add it to matching phrases
-                if similarity > 25:  # Adjusted threshold for semantic matching
+                if similarity > 30:  # Increased threshold for more meaningful matches
+                    # Format the matches for display
                     matching_phrases.append({
                         "original": sent1,
-                        "matching": sent2,
+                        "source": sent2,  # Changed to 'source' to match the format in find_matching_phrases
                         "similarity": similarity,
-                        "semantic_matches": semantic_matches
+                        "semantic_matches": semantic_matches,
+                        "word_count": word_count1  # Add word count for filtering/sorting
                     })
         
-        # Sort by similarity score (highest first)
-        matching_phrases.sort(key=lambda x: x["similarity"], reverse=True)
+        # Sort by similarity score (highest first) and word count (longer sentences first)
+        matching_phrases.sort(key=lambda x: (x["similarity"], x["word_count"]), reverse=True)
         
         # Take top matches to avoid overwhelming with too many results
-        return matching_phrases[:10]
+        return matching_phrases[:5]  # Reduced to top 5 for higher quality matches
         
     except Exception as e:
         logger.error(f"Error finding semantic matching phrases: {str(e)}")
