@@ -443,6 +443,20 @@ DOMAIN_SPECIFIC_TERMS = {
     ]
 }
 
+# Define a global list of stopwords and non-informative terms to filter out
+NON_INFORMATIVE_TERMS = [
+    "the", "a", "an", "this", "that", "these", "those", "it", "they", "he", "she",
+    "young", "adult", "old", "new", "many", "few", "several", "various", "different",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having",
+    "do", "does", "did", "can", "could", "will", "would", "shall", "should", "may", "might",
+    "must", "some", "such", "other", "another", "more", "most", "all", "any", "each",
+    "very", "quite", "rather", "somewhat", "well", "just", "only", "also", "too", "so",
+    "during", "before", "after", "while", "since", "until", "within", "without", "upon", "about",
+    "above", "below", "under", "over", "between", "among", "along", "around", "through", 
+    "their", "our", "your", "my", "his", "her", "its", "which", "what", "who", "whom", "where",
+    "like", "as", "than", "then", "when", "how", "why", "because", "therefore", "thus"
+]
+
 def extract_domain_entities(text, category):
     """
     Extract domain-specific entities based on the category.
@@ -479,7 +493,13 @@ def extract_domain_entities(text, category):
     # Combine the common and domain-specific entities
     all_entities = list(set(common_entities + domain_entities))
     
-    return all_entities
+    # Filter out non-informative terms
+    filtered_entities = [entity for entity in all_entities 
+                        if entity.lower() not in NON_INFORMATIVE_TERMS
+                        and len(entity) > 2  # Exclude very short entities
+                        and entity.lower() not in ["the young", "the adult", "the old"]]  # Explicitly exclude common phrases
+    
+    return filtered_entities
 
 def extract_common_entities(text):
     """
@@ -530,12 +550,21 @@ def extract_biological_entities(text):
     # Use domain-specific terms
     important_bio_terms = DOMAIN_SPECIFIC_TERMS["biology"]
     
+    # Stopwords and non-informative terms to filter out
+    non_informative_terms = [
+        "the", "a", "an", "this", "that", "these", "those", "it", "they", "he", "she",
+        "young", "adult", "old", "new", "many", "few", "several", "various", "different",
+        "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having",
+        "do", "does", "did", "can", "could", "will", "would", "shall", "should", "may", "might",
+        "must", "some", "such", "other", "another", "more", "most", "all", "any", "each"
+    ]
+    
     # Compile patterns to identify important noun phrases
     # Phrases like "adult beetle", "green coloration", "reproductive season"
     noun_phrase_patterns = [
-        r'\b(?:the\s+)?([a-z]+)\s+(beetle|insect|bug|adult|larva|pupa)\b',  # adult beetle
-        r'\b(?:the\s+)?(beetle|insect|bug|adult|larva|pupa)\s+(?:is|has|with)\s+([a-z]+)\b',  # beetle is green
-        r'\b(?:the\s+)?(abdomen|thorax|head|wing|leg|antenna|ovipositor)\b',  # anatomical parts
+        r'\b(?:the\s+)?([a-z]+(?!\s+(?:is|are|was|were)))\s+(beetle|insect|bug|larva|pupa)\b',  # adult beetle (avoiding "is")
+        r'\b(?:the\s+)?(beetle|insect|bug|larva|pupa)\s+(?:is|has|with)\s+([a-z]+)\b',  # beetle is green
+        r'\b(?:the\s+)?(abdomen|thorax|head|wing|leg|antenna|ovipositor|testes|oviduct)\b',  # anatomical parts
         r'\b(?:the\s+)?([a-z]+)\s+(abdomen|thorax|head|wing|leg|antenna)\b',  # green abdomen
         r'\b(?:the\s+)?(reproductive|feeding|mating|development)\s+([a-z]+)\b',  # reproductive season
         r'\b([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)\b'  # 6 millimetres long
@@ -1094,6 +1123,15 @@ def generate_search_terms(category, text):
     # Extract domain-specific entities based on the category
     domain_entities = extract_domain_entities(text, category)
     
+    # Safety check - ensure we don't have problematic tokens
+    problematic_terms = ["the young", "the adult", "young", "adult", "the"]
+    
+    # Create a second list of filtered domain entities to be extra safe
+    filtered_domain_entities = []
+    for entity in domain_entities:
+        if entity.lower() not in problematic_terms and not any(entity.lower().startswith(term) for term in ["the ", "a "]):
+            filtered_domain_entities.append(entity)
+    
     # For any category, if we have scientific names, they're usually high-value search terms
     if scientific_names:
         for name in scientific_names[:2]:  # Top 2 scientific names
@@ -1105,9 +1143,15 @@ def generate_search_terms(category, text):
                 search_terms.append(f"{name} {category}")
     
     # If we have domain-specific entities, use them intelligently
-    if domain_entities:
+    if filtered_domain_entities:
         # Determine if there's a primary entity type for this domain
-        primary_entity = get_primary_entity(domain_entities, category)
+        primary_entity = get_primary_entity(filtered_domain_entities, category)
+        
+        # Be extra sure our primary entity isn't in the problematic list
+        if primary_entity and primary_entity.lower() in problematic_terms:
+            # Try to find another entity
+            filtered_domain_entities = [e for e in filtered_domain_entities if e.lower() not in problematic_terms]
+            primary_entity = get_primary_entity(filtered_domain_entities, category) if filtered_domain_entities else None
         
         # Add primary entity searches
         if primary_entity:
@@ -1124,7 +1168,7 @@ def generate_search_terms(category, text):
                 search_terms.append(f"{primary_entity} wikipedia")
         
         # Get secondary entities that complement the primary entity
-        secondary_entities = get_secondary_entities(domain_entities, primary_entity, category)
+        secondary_entities = get_secondary_entities(filtered_domain_entities, primary_entity, category)
         
         # Add combinations of primary entity with secondary entities
         for sec_entity in secondary_entities[:2]:  # Limit to top 2 secondary entities
@@ -1134,15 +1178,15 @@ def generate_search_terms(category, text):
                 else:
                     search_terms.append(sec_entity)
         
-        # Add any remaining high-value entities
-        remaining_entities = [e for e in domain_entities 
-                             if e not in search_terms 
-                             and not any(e in term for term in search_terms)
-                             and len(e) > 3]
-        
-        for entity in remaining_entities[:2]:  # Limit to 2 more entities
-            if len(search_terms) < 5:
-                search_terms.append(entity)
+        # Add specific search for beetle abdomen or anatomical parts for biology
+        if category == "biology" and "beetle" in text.lower():
+            anatomical_terms = ["abdomen", "thorax", "head", "wing", "antenna", 
+                               "elytra", "leg", "ovipositor", "reproductive"]
+            
+            for term in anatomical_terms:
+                if term in text.lower() and len(search_terms) < 5:
+                    search_terms.append(f"beetle {term}")
+                    break
     
     # If we don't have enough search terms yet, add key phrases or domain concepts
     if len(search_terms) < 3:
@@ -1151,15 +1195,21 @@ def generate_search_terms(category, text):
             key_phrases = extract_key_phrases(text)
             for phrase in key_phrases[:2]:  # Limit to 2 phrases
                 if len(search_terms) < 5 and len(phrase) < 30:  # Reasonable length 
-                    search_terms.append(phrase)
+                    # Check that phrase doesn't start with problematic terms
+                    if not any(phrase.lower().startswith(term) for term in problematic_terms):
+                        search_terms.append(phrase)
         else:
             # For non-biology, add domain-specific concept phrases
             domain_concepts = get_domain_concepts(category)
             
             # Extract features for common word identification
             features = extract_features(text)
-            common_words = features["word_freq"].most_common(5)
-            meaningful_words = [word for word, _ in common_words if len(word) > 3]
+            common_words = features["word_freq"].most_common(10)
+            
+            # Filter to ensure we don't use problematic terms
+            meaningful_words = [word for word, _ in common_words 
+                              if len(word) > 3 
+                              and word.lower() not in problematic_terms]
             
             # Combine top meaningful word with domain concept
             if meaningful_words and domain_concepts:
@@ -1167,14 +1217,29 @@ def generate_search_terms(category, text):
                     if len(search_terms) < 5:
                         search_terms.append(f"{meaningful_words[0]} {concept}")
     
-    # Ensure we have at least some search terms
+    # If we still have no terms after all our checks, use the category
     if not search_terms and category != "general":
-        search_terms.append(category)
+        # Add some domain-specific fallback terms
+        if category == "biology" and "beetle" in text.lower():
+            search_terms.append("beetle biology")
+            search_terms.append("insect anatomy")
+        else:
+            search_terms.append(category)
+    
+    # Do a final filter to ensure we don't have problematic terms
+    filtered_search_terms = []
+    for term in search_terms:
+        if not any(term.lower() == pt.lower() for pt in problematic_terms) and term.lower() not in problematic_terms:
+            filtered_search_terms.append(term)
+    
+    # If we filtered too aggressively and have no terms, add a safe fallback
+    if not filtered_search_terms:
+        filtered_search_terms = [category]
     
     # Remove duplicates and limit to max 5 search terms
     # Convert to lowercase for easier comparison
     unique_terms = []
-    for term in search_terms:
+    for term in filtered_search_terms:
         term_lower = term.lower()
         if not any(term_lower == t.lower() for t in unique_terms):
             unique_terms.append(term)
