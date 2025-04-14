@@ -258,26 +258,277 @@ def classify_text(text):
             "search_terms": []
         }
 
+# Dictionary of important domain-specific terms for each category
+DOMAIN_SPECIFIC_TERMS = {
+    "biology": [
+        # Organism types
+        "beetle", "insect", "bug", "arthropod", "species", "specimen", "animal", "organism",
+        "plant", "bacteria", "fungus", "virus", "microbe", "parasite", "genus", "taxon",
+        # Anatomical parts
+        "abdomen", "thorax", "head", "antenna", "wing", "leg", "segment", "exoskeleton",
+        "ovipositor", "mandible", "eye", "elytra", "pronotum", "testes", "oviduct",
+        "chromosome", "cell", "tissue", "membrane", "organelle", "nucleus", "mitochondria",
+        # Life stages
+        "larva", "pupa", "nymph", "instar", "juvenile", "imago", "adult", "egg",
+        "embryo", "fetus", "seed", "germination", "seedling", "sprout", "growth",
+        # Biological processes
+        "metamorphosis", "reproduction", "mating", "feeding", "development", "evolution",
+        "molting", "diapause", "reproductive", "copulation", "parasitizing", "photosynthesis",
+        "respiration", "digestion", "excretion", "circulation", "adaptation", "mutation",
+        # Physical characteristics
+        "coloration", "pattern", "size", "length", "width", "color", "shape", "weight"
+    ],
+    
+    "technology": [
+        # Computing hardware
+        "processor", "cpu", "gpu", "ram", "memory", "hard disk", "ssd", "motherboard",
+        "server", "network", "router", "switch", "hub", "firewall", "bandwidth", "latency",
+        # Software
+        "algorithm", "code", "program", "software", "database", "operating system", "api",
+        "framework", "library", "compiler", "interpreter", "runtime", "debugger", "function",
+        # Development
+        "development", "programming", "coding", "testing", "debugging", "deployment",
+        "version control", "git", "repository", "commit", "merge", "pull request", "agile",
+        # Internet & Web
+        "internet", "web", "website", "browser", "frontend", "backend", "cloud", "hosting",
+        "domain", "url", "html", "css", "javascript", "http", "https", "rest", "graphql",
+        # Emerging tech
+        "artificial intelligence", "machine learning", "deep learning", "blockchain",
+        "cryptocurrency", "bitcoin", "quantum computing", "virtual reality", "augmented reality",
+        "robotics", "automation", "iot", "internet of things", "big data", "data science"
+    ],
+    
+    "history": [
+        # Time periods
+        "ancient", "medieval", "renaissance", "modern", "prehistoric", "century",
+        "era", "period", "age", "dynasty", "epoch", "millennium", "decade", "year",
+        # Civilizations
+        "empire", "kingdom", "civilization", "society", "culture", "nation", "state",
+        "republic", "city-state", "tribe", "colony", "settlement", "territory",
+        # People & roles
+        "king", "queen", "emperor", "pharaoh", "ruler", "monarch", "president",
+        "general", "soldier", "warrior", "peasant", "noble", "aristocrat", "slave",
+        # Events
+        "war", "battle", "conquest", "invasion", "revolution", "uprising", "rebellion",
+        "conflict", "siege", "campaign", "treaty", "alliance", "peace", "armistice",
+        # Artifacts
+        "artifact", "relic", "remains", "ruin", "monument", "temple", "tomb", 
+        "manuscript", "document", "archive", "record", "inscription", "hieroglyph"
+    ],
+    
+    "medicine": [
+        # Conditions
+        "disease", "disorder", "syndrome", "condition", "illness", "infection", "inflammation",
+        "cancer", "tumor", "lesion", "injury", "wound", "fracture", "trauma", "pain",
+        # Treatment
+        "treatment", "therapy", "medication", "drug", "antibiotic", "vaccine", "surgery",
+        "procedure", "intervention", "regimen", "dose", "prescription", "protocol", "cure",
+        # Anatomy
+        "organ", "tissue", "bone", "muscle", "nerve", "vein", "artery", "blood vessel",
+        "brain", "heart", "lung", "liver", "kidney", "joint", "tendon", "ligament",
+        # Healthcare
+        "doctor", "physician", "surgeon", "nurse", "patient", "hospital", "clinic", 
+        "diagnosis", "prognosis", "symptom", "sign", "test", "scan", "x-ray", "mri",
+        # Processes
+        "healing", "recovery", "remission", "relapse", "acute", "chronic", "congenital",
+        "pathology", "etiology", "physiology", "immunity", "metabolism", "respiration"
+    ],
+    
+    "agriculture": [
+        # Crops
+        "crop", "plant", "seed", "grain", "fruit", "vegetable", "cereal", "legume",
+        "corn", "wheat", "rice", "soybean", "cotton", "orchard", "vineyard", "harvest",
+        # Farming
+        "farm", "farmer", "farming", "agriculture", "cultivation", "planting", "growing",
+        "harvesting", "irrigation", "fertilization", "sustainable", "organic", "conventional",
+        # Soil & Land
+        "soil", "land", "field", "plot", "acre", "hectare", "topsoil", "subsoil", 
+        "fertility", "nutrient", "mineral", "erosion", "drainage", "conservation", "rotation",
+        # Equipment
+        "tractor", "plow", "harvester", "combine", "thresher", "drill", "sprayer", 
+        "equipment", "machinery", "implement", "tool", "greenhouse", "silo", "barn",
+        # Inputs & Management
+        "fertilizer", "pesticide", "herbicide", "insecticide", "fungicide", "manure", 
+        "compost", "yield", "productivity", "pest", "weed", "disease", "drought", "frost"
+    ],
+    
+    "environment": [
+        # Ecosystems
+        "ecosystem", "habitat", "biome", "forest", "wetland", "grassland", "desert",
+        "tundra", "reef", "rainforest", "savanna", "estuary", "watershed", "biodiversity",
+        # Climate
+        "climate", "weather", "temperature", "precipitation", "rainfall", "drought",
+        "flood", "storm", "hurricane", "typhoon", "cyclone", "global warming", "climate change",
+        # Pollution & Impact
+        "pollution", "contamination", "emission", "waste", "sewage", "landfill", "toxin",
+        "carbon", "greenhouse gas", "co2", "methane", "ozone", "depletion", "deforestation",
+        # Conservation
+        "conservation", "protection", "preservation", "restoration", "sustainability",
+        "renewable", "efficient", "recycling", "biodegradable", "stewardship", "sanctuary",
+        # Resources
+        "resource", "energy", "water", "air", "soil", "mineral", "fossil fuel", "solar",
+        "wind", "hydro", "geothermal", "biomass", "natural gas", "coal", "oil"
+    ],
+    
+    "economics": [
+        # Markets
+        "market", "economy", "trade", "commerce", "exchange", "supply", "demand", 
+        "price", "cost", "value", "money", "currency", "inflation", "deflation", "recession",
+        # Finance
+        "finance", "investment", "stock", "bond", "share", "securities", "dividend",
+        "interest", "loan", "mortgage", "credit", "debt", "asset", "liability", "equity",
+        # Business
+        "business", "company", "corporation", "firm", "enterprise", "industry", "sector",
+        "profit", "revenue", "income", "loss", "expense", "budget", "audit", "acquisition",
+        # Employment
+        "employment", "unemployment", "job", "labor", "wage", "salary", "compensation",
+        "worker", "employee", "employer", "union", "benefit", "pension", "retirement",
+        # Economic concepts
+        "gdp", "growth", "fiscal", "monetary", "tax", "tariff", "subsidy", "stimulus",
+        "austerity", "privatization", "regulation", "deregulation", "globalization", "exports"
+    ],
+    
+    "politics": [
+        # Government structures
+        "government", "state", "federal", "democracy", "republic", "monarchy", "dictatorship",
+        "parliament", "congress", "senate", "legislature", "judiciary", "executive", "constitution",
+        # Processes
+        "election", "vote", "ballot", "campaign", "policy", "legislation", "regulation",
+        "law", "bill", "referendum", "amendment", "veto", "debate", "approval", "ratification",
+        # Roles
+        "president", "prime minister", "senator", "representative", "legislator", "congressman",
+        "judge", "justice", "minister", "secretary", "cabinet", "ambassador", "diplomat",
+        # International relations
+        "international", "foreign", "domestic", "diplomacy", "treaty", "alliance", "agreement", 
+        "sanctions", "embargo", "negotiation", "summit", "convention", "protocol", "relations",
+        # Political concepts
+        "liberal", "conservative", "progressive", "radical", "moderate", "left", "right", 
+        "center", "sovereignty", "authority", "power", "rights", "citizenship", "constituency"
+    ],
+    
+    "education": [
+        # Institutions
+        "school", "university", "college", "academy", "institute", "campus", "department",
+        "faculty", "administration", "board", "district", "preschool", "elementary", "secondary",
+        # Roles
+        "student", "teacher", "professor", "instructor", "educator", "faculty", "principal",
+        "dean", "superintendent", "counselor", "researcher", "scholar", "undergraduate", "graduate",
+        # Learning
+        "learning", "study", "education", "knowledge", "curriculum", "course", "class",
+        "subject", "discipline", "major", "minor", "seminar", "workshop", "training", "lecture",
+        # Assessment
+        "test", "exam", "assessment", "evaluation", "grade", "score", "performance", 
+        "assignment", "homework", "project", "thesis", "dissertation", "research", "paper",
+        # Educational concepts
+        "pedagogy", "instruction", "literacy", "numeracy", "skill", "competency", "ability",
+        "accreditation", "certification", "diploma", "degree", "credential", "standards", "outcomes"
+    ],
+    
+    "literature": [
+        # Forms
+        "novel", "poem", "play", "essay", "short story", "novella", "epic", "romance",
+        "comedy", "tragedy", "drama", "satire", "fiction", "nonfiction", "memoir", "biography",
+        # Elements
+        "plot", "character", "setting", "theme", "conflict", "resolution", "climax",
+        "protagonist", "antagonist", "narrator", "dialogue", "monologue", "description", "scene",
+        # Creation
+        "author", "writer", "poet", "playwright", "novelist", "critic", "editor", "publisher",
+        "writing", "composition", "revision", "editing", "publication", "manuscript", "draft",
+        # Analysis
+        "analysis", "interpretation", "criticism", "review", "commentary", "explication",
+        "symbol", "metaphor", "simile", "imagery", "allusion", "alliteration", "rhyme", "meter",
+        # Literary periods
+        "classical", "medieval", "renaissance", "romantic", "realist", "modernist", "postmodern",
+        "victorian", "enlightenment", "gothic", "baroque", "naturalist", "surrealist", "beat"
+    ]
+}
+
+def extract_domain_entities(text, category):
+    """
+    Extract domain-specific entities based on the category.
+    This function serves as a dispatcher to appropriate specialized entity extractors.
+    """
+    # Extract common entities that apply to all categories
+    common_entities = extract_common_entities(text)
+    
+    # Extract domain-specific entities based on category
+    if category == "biology":
+        domain_entities = extract_biological_entities(text)
+    elif category == "technology":
+        domain_entities = extract_technology_entities(text)
+    elif category == "history":
+        domain_entities = extract_historical_entities(text)
+    elif category == "medicine":
+        domain_entities = extract_medical_entities(text)
+    elif category == "agriculture":
+        domain_entities = extract_agricultural_entities(text)
+    elif category == "environment":
+        domain_entities = extract_environmental_entities(text)
+    elif category == "economics":
+        domain_entities = extract_economic_entities(text)
+    elif category == "politics":
+        domain_entities = extract_political_entities(text)
+    elif category == "education":
+        domain_entities = extract_educational_entities(text)
+    elif category == "literature":
+        domain_entities = extract_literary_entities(text)
+    else:
+        # Default to common entities only for unknown categories
+        return common_entities
+    
+    # Combine the common and domain-specific entities
+    all_entities = list(set(common_entities + domain_entities))
+    
+    return all_entities
+
+def extract_common_entities(text):
+    """
+    Extract entities common to all domains: named entities, numeric values,
+    dates, and significant noun phrases.
+    """
+    entities = []
+    
+    # Extract capitalized named entities
+    for match in re.finditer(r'\b[A-Z][a-zA-Z]{2,}\b', text):
+        entity = match.group(0)
+        if entity.lower() not in ["the", "and", "but", "for", "nor", "yet", "so", "as", "at", "by", "from"]:
+            entities.append(entity)
+    
+    # Extract numerical values with units
+    for match in re.finditer(r'\b([0-9]+(?:\.[0-9]+)?)\s*(percent|kg|m|km|ft|mph|tons?|grams?|dollars?)\b', text, re.IGNORECASE):
+        entities.append(match.group(0))
+    
+    # Extract dates
+    for match in re.finditer(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+[0-9]{1,2},?\s+[0-9]{4}\b', text):
+        entities.append(match.group(0))
+    
+    # Extract years
+    for match in re.finditer(r'\b(19|20)[0-9]{2}\b', text):
+        entities.append(match.group(0))
+    
+    # Extract meaningful multi-word phrases (noun phrases)
+    noun_phrase_patterns = [
+        r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b',  # Multi-word proper nouns
+        r'\b([a-z]+\s+(?:system|process|project|program|initiative|strategy|framework|concept))\b'  # Common noun phrases
+    ]
+    
+    for pattern in noun_phrase_patterns:
+        for match in re.finditer(pattern, text):
+            phrase = match.group(0)
+            if len(phrase) > 5:  # Reasonable length
+                entities.append(phrase)
+    
+    return entities
+
 def extract_biological_entities(text):
     """
     Extract meaningful biological entities from the text.
     Focus on organism types, anatomical parts, and biological processes.
     """
-    # Define biological and anatomical terms that would be important in descriptions
-    important_bio_terms = [
-        # Organism types
-        "beetle", "insect", "bug", "arthropod", "species", "specimen", "animal",
-        # Anatomical parts
-        "abdomen", "thorax", "head", "antenna", "wing", "leg", "segment", "exoskeleton",
-        "ovipositor", "mandible", "eye", "elytra", "pronotum", "testes", "oviduct",
-        # Life stages
-        "larva", "pupa", "nymph", "instar", "juvenile", "imago", "adult", "egg",
-        # Biological processes
-        "metamorphosis", "reproduction", "mating", "feeding", "development", 
-        "molting", "diapause", "reproductive", "copulation", "parasitizing",
-        # Physical characteristics
-        "coloration", "pattern", "size", "length", "width", "color", "shape"
-    ]
+    entities = []
+    
+    # Use domain-specific terms
+    important_bio_terms = DOMAIN_SPECIFIC_TERMS["biology"]
     
     # Compile patterns to identify important noun phrases
     # Phrases like "adult beetle", "green coloration", "reproductive season"
@@ -291,7 +542,6 @@ def extract_biological_entities(text):
     ]
 
     # Extract entities using patterns
-    entities = []
     for pattern in noun_phrase_patterns:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
@@ -326,6 +576,485 @@ def extract_biological_entities(text):
         if color not in ["is", "are", "the", "and", "or", "very", "quite", "somewhat"]:
             if color not in entities:
                 entities.append(color)
+    
+    # Extract scientific classifications
+    sci_patterns = [
+        r'\b(?:phylum|class|order|family|genus|species)\s+([A-Z][a-z]+)\b',  # Taxonomic classifications
+        r'\b([A-Z][a-z]+)(?:\s+[a-z]+)?\s+(?:is|are)\s+(?:a|an)\s+(?:species|genus|family)\b'  # Descriptions
+    ]
+    
+    for pattern in sci_patterns:
+        for match in re.finditer(pattern, text):
+            # Extract the taxonomic name
+            if match.groups():
+                entities.append(match.group(1))
+    
+    return entities
+
+def extract_technology_entities(text):
+    """
+    Extract technology-specific entities from text.
+    Focuses on software, hardware, programming, and digital concepts.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_tech_terms = DOMAIN_SPECIFIC_TERMS["technology"]
+    
+    # Define tech-specific patterns
+    tech_patterns = [
+        r'\b([A-Za-z0-9]+(?:\.[A-Za-z0-9]+)+)\b',  # Software versions, domains, file extensions
+        r'\b([A-Z][a-zA-Z0-9]*(?:\+\+|#|\.NET))\b',  # Programming languages like C++, C#
+        r'\b([a-z]+\.(js|py|java|rb|c|cpp|h|cs|php|html|css|sql))\b',  # Code files
+        r'\b(?:uses?|using|with|based on|built with)\s+([A-Za-z][A-Za-z0-9]+)\b',  # Technologies used
+        r'\b([a-z]+)\s+(?:framework|library|platform|language|database|api|stack|algorithm)\b',  # Tech components
+        r'\b(?:hardware|device|gadget|processor|chip)(?:\s+called|\s+named)?\s+([A-Za-z0-9]+)\b'  # Hardware references
+    ]
+    
+    # Extract tech entities using patterns
+    for pattern in tech_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1).lower()
+                if entity not in entities and len(entity) > 2:
+                    entities.append(entity)
+    
+    # Extract single-word important tech terms
+    words = re.findall(r'\b([a-z][a-z0-9]{2,})\b', text.lower())
+    for word in words:
+        if word in important_tech_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for measurements and specifications
+    spec_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(GB|MB|TB|GHz|MHz|MP|KB)\b',  # Tech measurements
+        r'\b([0-9]+[Kk])\s*(?:resolution|pixels?)\b',  # Resolution
+        r'\b([0-9]+)\s*(?:bit|core|threads?)\b'  # Computing specifications
+    ]
+    
+    for pattern in spec_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            spec = match.group(0).lower()
+            if spec not in entities:
+                entities.append(spec)
+    
+    return entities
+
+def extract_historical_entities(text):
+    """
+    Extract history-specific entities from text.
+    Focuses on time periods, historical figures, events, and locations.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_hist_terms = DOMAIN_SPECIFIC_TERMS["history"]
+    
+    # Define history-specific patterns
+    hist_patterns = [
+        r'\b(?:in|during|after|before|since)\s+(?:the\s+)?([0-9]{1,2}(?:st|nd|rd|th)?\s+century)\b',  # Centuries
+        r'\b(?:the\s+)?(ancient|medieval|renaissance|modern|postmodern|early|late|mid|pre|post)\s+(?:period|era|age|times?)\b',  # Time periods
+        r'\b(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:empire|kingdom|dynasty|republic|civilization|era|period)\b',  # Named historical entities
+        r'\b(?:emperor|king|queen|pharaoh|general|ruler)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',  # Rulers
+        r'\b(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:war|battle|invasion|conquest|revolution|uprising|rebellion)\b',  # Historical events
+        r'\b(?:in|at|near|from)\s+([0-9]{3,4})(?:\s+(?:BCE|CE|AD|BC))?\b'  # Years/dates
+    ]
+    
+    # Extract historical entities using patterns
+    for pattern in hist_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1)
+                if entity.lower() not in ["the"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important historical terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_hist_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for date ranges that often indicate historical periods
+    date_patterns = [
+        r'\b(?:from|between)?\s*([0-9]{3,4})\s*(?:to|-|–|until)\s*([0-9]{3,4})\b',  # Date ranges like 1914-1918
+        r'\b(?:the\s+)?([0-9]{4}s)\b'  # Decades like 1920s
+    ]
+    
+    for pattern in date_patterns:
+        for match in re.finditer(pattern, text):
+            date_range = match.group(0)
+            if date_range not in entities:
+                entities.append(date_range)
+    
+    return entities
+
+def extract_medical_entities(text):
+    """
+    Extract medicine-specific entities from text.
+    Focuses on conditions, treatments, anatomy, and medical procedures.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_med_terms = DOMAIN_SPECIFIC_TERMS["medicine"]
+    
+    # Define medicine-specific patterns
+    med_patterns = [
+        r'\b(?:diagnosed|suffering|afflicted)\s+(?:with|from)\s+([a-z]+(?:\s+[a-z]+){0,3})\b',  # Diagnosed conditions
+        r'\b(?:the\s+)?([a-z]+)\s+(?:disease|syndrome|disorder|condition|infection)\b',  # Named conditions
+        r'\b(?:the\s+)?([a-z]+)\s+(?:treatment|therapy|procedure|surgery|medication)\b',  # Treatments
+        r'\b(?:administering|administered|prescribed|taking|given)\s+([a-z]+(?:\s+[a-z]+){0,3})\b',  # Medications
+        r'\b(?:the\s+)?([a-z]+)\s+(?:symptoms?|signs?)\b',  # Symptoms
+        r'\b(?:patients?|doctors?|physicians?|surgeons?)\s+(?:with|who|that)\s+([a-z]+)\b'  # Patient/doctor relations
+    ]
+    
+    # Extract medical entities using patterns
+    for pattern in med_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1).lower()
+                if entity not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important medical terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_med_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for measurements and dosages
+    dosage_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(mg|g|ml|mcg|cc|units?)\b',  # Medical measurements
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:times|doses|tablets|capsules|pills)\s+(?:a|per)\s+(?:day|week|month)\b'  # Dosage frequency
+    ]
+    
+    for pattern in dosage_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            dosage = match.group(0).lower()
+            if dosage not in entities:
+                entities.append(dosage)
+    
+    return entities
+
+def extract_agricultural_entities(text):
+    """
+    Extract agriculture-specific entities from text.
+    Focuses on crops, farming practices, soil, and agricultural processes.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_ag_terms = DOMAIN_SPECIFIC_TERMS["agriculture"]
+    
+    # Define agriculture-specific patterns
+    ag_patterns = [
+        r'\b(?:growing|cultivating|planting|harvesting)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Cultivation activities
+        r'\b(?:the\s+)?([a-z]+)\s+(?:crop|seed|cultivar|variety|plant|grain)\b',  # Plant types
+        r'\b(?:the\s+)?([a-z]+)\s+(?:soil|field|farm|plantation|orchard|greenhouse)\b',  # Farm locations
+        r'\b(?:using|apply|applying|spreading)\s+([a-z]+(?:\s+[a-z]+){0,2})\s+(?:fertilizer|pesticide|herbicide)\b',  # Agricultural inputs
+        r'\b(?:the\s+)?([a-z]+)\s+(?:technique|method|approach|system|practice)\s+(?:of|for|in)\s+(?:farming|agriculture|cultivation)\b',  # Farming methods
+        r'\b(?:agricultural|farming|crop)\s+([a-z]+(?:\s+[a-z]+){0,2})\b'  # Agricultural concepts
+    ]
+    
+    # Extract agricultural entities using patterns
+    for pattern in ag_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1).lower()
+                if entity not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important agricultural terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_ag_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for agricultural measurements
+    ag_measurement_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:bushels|acres|hectares|tons)\b',  # Farm measurements
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:kg/ha|lbs/acre)\b',  # Yield measurements
+        r'\b(?:yield|production)\s+of\s+([0-9]+(?:\.[0-9]+)?)\b'  # Production numbers
+    ]
+    
+    for pattern in ag_measurement_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            measurement = match.group(0).lower()
+            if measurement not in entities:
+                entities.append(measurement)
+    
+    return entities
+
+def extract_environmental_entities(text):
+    """
+    Extract environment-specific entities from text.
+    Focuses on ecosystems, climate, pollution, conservation, and resources.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_env_terms = DOMAIN_SPECIFIC_TERMS["environment"]
+    
+    # Define environment-specific patterns
+    env_patterns = [
+        r'\b(?:the\s+)?([a-z]+)\s+(?:ecosystem|habitat|biome|environment|forest|wetland)\b',  # Ecosystem types
+        r'\b(?:the\s+)?([a-z]+)\s+(?:species|wildlife|fauna|flora|conservation|protection)\b',  # Conservation elements
+        r'\b(?:effects?|impacts?|consequences?)\s+of\s+([a-z]+(?:\s+[a-z]+){0,3})\b',  # Environmental effects
+        r'\b(?:climate|environmental)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Climate factors
+        r'\b(?:the\s+)?([a-z]+)\s+(?:pollution|contamination|waste|emissions?)\b',  # Pollution types
+        r'\b(?:renewable|sustainable|conservation)\s+([a-z]+(?:\s+[a-z]+){0,2})\b'  # Sustainability concepts
+    ]
+    
+    # Extract environmental entities using patterns
+    for pattern in env_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1).lower()
+                if entity not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important environmental terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_env_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for environmental measurements
+    env_measurement_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:ppm|ppb|µg/m3|mg/l)\b',  # Environmental measurements
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*degrees?\s+(?:Celsius|Fahrenheit|centigrade)\b',  # Temperature
+        r'\b(?:increased|decreased|reduced|elevated)\s+by\s+([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%)\b'  # Change measurements
+    ]
+    
+    for pattern in env_measurement_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            measurement = match.group(0).lower()
+            if measurement not in entities:
+                entities.append(measurement)
+    
+    return entities
+
+def extract_economic_entities(text):
+    """
+    Extract economics-specific entities from text.
+    Focuses on markets, finance, business, employment, and economic concepts.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_econ_terms = DOMAIN_SPECIFIC_TERMS["economics"]
+    
+    # Define economics-specific patterns
+    econ_patterns = [
+        r'\b(?:the\s+)?([a-z]+)\s+(?:market|economy|industry|sector|index)\b',  # Economic sectors
+        r'\b(?:the\s+)?([a-z]+)\s+(?:stock|bond|security|investment|fund|asset)\b',  # Financial instruments
+        r'\b(?:the\s+)?([a-z]+)\s+(?:company|corporation|firm|enterprise|business)\b',  # Business entities
+        r'\b(?:economic|fiscal|monetary|financial)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Economic concepts
+        r'\b(?:increased|decreased|grew|fell|rose|dropped)\s+(?:by|to)\s+([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%)\b',  # Financial changes
+        r'\b(?:the\s+)?([a-z]+)\s+(?:tax|tariff|subsidy|regulation|deregulation|privatization)\b'  # Policy instruments
+    ]
+    
+    # Extract economic entities using patterns
+    for pattern in econ_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1).lower()
+                if entity not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important economic terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_econ_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for economic figures and statistics
+    econ_stat_patterns = [
+        r'\b(?:USD|EUR|GBP|JPY|CNY)?\s*\$?\s*([0-9]+(?:[,.][0-9]+)*)\s*(?:million|billion|trillion)?\b',  # Monetary values
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%)\s+(?:growth|increase|decrease|decline|interest|inflation|unemployment)\b',  # Economic rates
+        r'\b(?:GDP|revenue|profit|loss|debt|deficit)\s+of\s+(?:USD|EUR|GBP|JPY|CNY)?\s*\$?\s*([0-9]+(?:[,.][0-9]+)*)\b'  # Economic figures
+    ]
+    
+    for pattern in econ_stat_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            stat = match.group(0).lower()
+            if stat not in entities:
+                entities.append(stat)
+    
+    return entities
+
+def extract_political_entities(text):
+    """
+    Extract politics-specific entities from text.
+    Focuses on government structures, processes, roles, international relations, and political concepts.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_pol_terms = DOMAIN_SPECIFIC_TERMS["politics"]
+    
+    # Define politics-specific patterns
+    pol_patterns = [
+        r'\b(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:government|administration|party|regime)\b',  # Named political entities
+        r'\b(?:the\s+)?([a-z]+)\s+(?:election|vote|referendum|campaign|policy|legislation)\b',  # Political processes
+        r'\b(?:president|prime minister|senator|representative|minister|secretary)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',  # Political figures
+        r'\b(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:treaty|agreement|accord|resolution|declaration)\b',  # International agreements
+        r'\b(?:political|governmental|diplomatic|legislative|regulatory)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Political concepts
+        r'\b(?:the\s+)?([a-z]+)\s+(?:policy|bill|law|regulation|reform|amendment)\b'  # Policy instruments
+    ]
+    
+    # Extract political entities using patterns
+    for pattern in pol_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1)
+                # Preserve case for proper nouns, lowercase for concepts
+                if not entity[0].isupper():
+                    entity = entity.lower()
+                if entity.lower() not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important political terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_pol_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for political statistics
+    pol_stat_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%)\s+(?:of the vote|approval|support|opposition)\b',  # Voting/approval percentages
+        r'\b([0-9]+)\s+(?:seats?|votes|representatives|delegates|members|constituencies)\b',  # Electoral figures
+        r'\b(?:won|lost|secured|obtained)\s+(?:by a margin of|with)\s+([0-9]+(?:\.[0-9]+)?)\b'  # Electoral margins
+    ]
+    
+    for pattern in pol_stat_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            stat = match.group(0).lower()
+            if stat not in entities:
+                entities.append(stat)
+    
+    return entities
+
+def extract_educational_entities(text):
+    """
+    Extract education-specific entities from text.
+    Focuses on institutions, roles, learning, assessment, and educational concepts.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_edu_terms = DOMAIN_SPECIFIC_TERMS["education"]
+    
+    # Define education-specific patterns
+    edu_patterns = [
+        r'\b(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:University|College|School|Institute|Academy)\b',  # Educational institutions
+        r'\b(?:the\s+)?([a-z]+)\s+(?:education|curriculum|program|course|degree|major|minor)\b',  # Educational offerings
+        r'\b(?:professor|teacher|instructor|student|faculty|dean)\s+(?:of|at|in)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Academic roles
+        r'\b(?:study|research|thesis|dissertation|project)\s+(?:on|about|regarding)\s+([a-z]+(?:\s+[a-z]+){0,3})\b',  # Academic works
+        r'\b(?:the\s+)?([a-z]+)\s+(?:exam|test|assessment|assignment|grade|score|evaluation)\b',  # Assessment types
+        r'\b(?:educational|academic|pedagogical|instructional)\s+([a-z]+(?:\s+[a-z]+){0,2})\b'  # Educational concepts
+    ]
+    
+    # Extract educational entities using patterns
+    for pattern in edu_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1)
+                # Preserve case for proper nouns, lowercase for concepts
+                if not entity[0].isupper():
+                    entity = entity.lower()
+                if entity.lower() not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important educational terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_edu_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for educational statistics
+    edu_stat_patterns = [
+        r'\b([0-9]+(?:\.[0-9]+)?)\s*(?:percent|%)\s+(?:pass|fail|graduation|retention|attendance|enrollment)\b',  # Educational percentages
+        r'\b([0-9]+)\s+(?:students|credits|courses|classes|hours|years)\b',  # Educational quantities
+        r'\b(?:grade\s+point\s+average|GPA)\s+of\s+([0-9]+(?:\.[0-9]+)?)\b'  # GPA measurements
+    ]
+    
+    for pattern in edu_stat_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            stat = match.group(0).lower()
+            if stat not in entities:
+                entities.append(stat)
+    
+    return entities
+
+def extract_literary_entities(text):
+    """
+    Extract literature-specific entities from text.
+    Focuses on forms, elements, creation, analysis, and literary periods.
+    """
+    entities = []
+    
+    # Use domain-specific terms
+    important_lit_terms = DOMAIN_SPECIFIC_TERMS["literature"]
+    
+    # Define literature-specific patterns
+    lit_patterns = [
+        r'\b(?:the\s+novel|poem|play|story|book|work|text)\s+(?:titled|called|named|entitled)\s+"?([A-Za-z][A-Za-z\s]+)"?\b',  # Titled works
+        r'\b(?:the\s+)?([a-z]+)\s+(?:novel|poem|play|story|essay|memoir|biography|autobiography)\b',  # Literary forms
+        r'\b(?:author|writer|poet|playwright|novelist)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',  # Literary figures
+        r'\b(?:the\s+)?([a-z]+)\s+(?:character|protagonist|antagonist|narrator|setting|theme|plot|conflict)\b',  # Literary elements
+        r'\b(?:literary|poetic|narrative|stylistic|rhetorical)\s+([a-z]+(?:\s+[a-z]+){0,2})\b',  # Literary concepts
+        r'\b(?:the\s+)?([a-z]+)\s+(?:period|movement|tradition|style|genre|school)\b'  # Literary classifications
+    ]
+    
+    # Extract literary entities using patterns
+    for pattern in lit_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Extract the matched entity
+            if match.groups():
+                entity = match.group(1)
+                # Preserve case for titles and proper nouns, lowercase for concepts
+                if not entity[0].isupper():
+                    entity = entity.lower()
+                if entity.lower() not in ["the", "a", "an"] and entity not in entities:
+                    entities.append(entity)
+    
+    # Extract single-word important literary terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_lit_terms and word not in entities:
+            entities.append(word)
+    
+    # Look for publication information
+    pub_patterns = [
+        r'\bpublished\s+(?:in|by)\s+([0-9]{4}|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',  # Publication info
+        r'\b(?:first|second|third|fourth|fifth|latest|final)\s+(?:edition|volume|installment|chapter)\b',  # Edition info
+        r'\b(?:written|authored|composed|created)\s+(?:in|during)\s+(?:the\s+)?([0-9]{4}|[a-z]+\s+(?:period|century|era))\b'  # Creation timeframe
+    ]
+    
+    for pattern in pub_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            if match.groups():
+                pub_info = match.group(1)
+                if pub_info not in entities:
+                    entities.append(pub_info)
     
     return entities
 
@@ -362,107 +1091,81 @@ def generate_search_terms(category, text):
     for genus, species in latin_name_matches:
         scientific_names.append(f"{genus} {species}")
     
-    # Extract biological entities for biology texts
-    if category == "biology":
-        # Get biological entities
-        bio_entities = extract_biological_entities(text)
+    # Extract domain-specific entities based on the category
+    domain_entities = extract_domain_entities(text, category)
+    
+    # For any category, if we have scientific names, they're usually high-value search terms
+    if scientific_names:
+        for name in scientific_names[:2]:  # Top 2 scientific names
+            search_terms.append(name)
+            # For encyclopedic content, searching with "wikipedia" is helpful
+            search_terms.append(f"{name} wikipedia")
+            # Add category for good measure
+            if len(search_terms) < 4:
+                search_terms.append(f"{name} {category}")
+    
+    # If we have domain-specific entities, use them intelligently
+    if domain_entities:
+        # Determine if there's a primary entity type for this domain
+        primary_entity = get_primary_entity(domain_entities, category)
         
-        # Prioritize scientific names if found
-        if scientific_names:
-            for name in scientific_names[:2]:  # Top 2 scientific names
-                search_terms.append(name)
-                # For encyclopedic content, searching with "wikipedia" is helpful
-                search_terms.append(f"{name} wikipedia")
-                # Add category for good measure
-                if len(search_terms) < 4:
-                    search_terms.append(f"{name} {category}")
+        # Add primary entity searches
+        if primary_entity:
+            # Combine primary entity with category (e.g., "beetle biology")
+            if f"{primary_entity} {category}" not in search_terms:
+                search_terms.append(f"{primary_entity} {category}")
+            
+            # If we have scientific name and primary entity, combine them
+            if scientific_names and f"{scientific_names[0]} {primary_entity}" not in search_terms:
+                search_terms.append(f"{scientific_names[0]} {primary_entity}")
+            
+            # Add specialized search with Wikipedia for encyclopedic content
+            if f"{primary_entity} wikipedia" not in search_terms:
+                search_terms.append(f"{primary_entity} wikipedia")
         
-        # Add primary biological entities
-        if bio_entities:
-            # Prioritize organism type (beetle, insect, etc.) if present
-            organism_types = ["beetle", "insect", "arthropod", "bug", "species"]
-            primary_entity = None
-            for organism in organism_types:
-                if organism in bio_entities:
-                    primary_entity = organism
-                    break
-            
-            # Add primary entity searches
-            if primary_entity:
-                # Combine primary entity (e.g., "beetle") with category
-                if f"{primary_entity} {category}" not in search_terms:
-                    search_terms.append(f"{primary_entity} {category}")
-                
-                # If we have scientific name and primary entity, combine them
-                if scientific_names and f"{scientific_names[0]} {primary_entity}" not in search_terms:
-                    search_terms.append(f"{scientific_names[0]} {primary_entity}")
-                
-                # Add specialized search with Wikipedia for encyclopedic content
-                if f"{primary_entity} wikipedia" not in search_terms:
-                    search_terms.append(f"{primary_entity} wikipedia")
-            
-            # Add key anatomical or descriptive terms combined with the primary entity or category
-            anatomical_parts = ["abdomen", "thorax", "wing", "antenna", "ovipositor", "testes", "reproductive"]
-            for part in anatomical_parts:
-                if part in bio_entities and len(search_terms) < 5:
-                    if primary_entity:
-                        search_terms.append(f"{primary_entity} {part}")
-                    else:
-                        search_terms.append(f"{part} {category}")
-                    break  # Just add one anatomical search term
-            
-            # Add specific searches for remaining biological entities
-            remaining_entities = [e for e in bio_entities if e not in search_terms and not any(e in term for term in search_terms)]
-            for entity in remaining_entities[:2]:  # Limit to 2 more entities
-                if len(search_terms) < 5:
-                    if primary_entity and entity != primary_entity:
-                        search_terms.append(f"{primary_entity} {entity}")
-                    else:
-                        search_terms.append(entity)
+        # Get secondary entities that complement the primary entity
+        secondary_entities = get_secondary_entities(domain_entities, primary_entity, category)
         
-        # If still not enough search terms, add key phrases
-        if len(search_terms) < 5:
+        # Add combinations of primary entity with secondary entities
+        for sec_entity in secondary_entities[:2]:  # Limit to top 2 secondary entities
+            if len(search_terms) < 5:
+                if primary_entity and sec_entity != primary_entity:
+                    search_terms.append(f"{primary_entity} {sec_entity}")
+                else:
+                    search_terms.append(sec_entity)
+        
+        # Add any remaining high-value entities
+        remaining_entities = [e for e in domain_entities 
+                             if e not in search_terms 
+                             and not any(e in term for term in search_terms)
+                             and len(e) > 3]
+        
+        for entity in remaining_entities[:2]:  # Limit to 2 more entities
+            if len(search_terms) < 5:
+                search_terms.append(entity)
+    
+    # If we don't have enough search terms yet, add key phrases or domain concepts
+    if len(search_terms) < 3:
+        # For biology, extract key phrases
+        if category == "biology":
             key_phrases = extract_key_phrases(text)
             for phrase in key_phrases[:2]:  # Limit to 2 phrases
                 if len(search_terms) < 5 and len(phrase) < 30:  # Reasonable length 
                     search_terms.append(phrase)
-    
-    else:
-        # For non-biology categories, fall back to original logic but with enhancements
-        # Extract features for common word identification
-        features = extract_features(text)
-        common_words = features["word_freq"].most_common(10)  # Get more words to have better choices
-        
-        # Filter for meaningful words (not just common but potentially meaningless words)
-        meaningful_words = [word for word, _ in common_words if len(word) > 3 and not word.startswith('the')]
-        
-        if meaningful_words:
-            # Add category-specific search with most meaningful word
-            search_terms.append(f"{meaningful_words[0]} {category}")
+        else:
+            # For non-biology, add domain-specific concept phrases
+            domain_concepts = get_domain_concepts(category)
             
-            # Add the top meaningful word by itself
-            search_terms.append(meaningful_words[0])
+            # Extract features for common word identification
+            features = extract_features(text)
+            common_words = features["word_freq"].most_common(5)
+            meaningful_words = [word for word, _ in common_words if len(word) > 3]
             
-            # Add combination of top meaningful words
-            if len(meaningful_words) >= 2:
-                search_terms.append(f"{meaningful_words[0]} {meaningful_words[1]}")
-            
-            # Add more meaningful words if needed
-            for word in meaningful_words[2:5]:
-                if len(search_terms) < 5:
-                    search_terms.append(word)
-        
-        # Look for capitalized entities as they might be important
-        cap_entities = []
-        for match in re.finditer(r'\b[A-Z][a-zA-Z]{3,}\b', text):
-            entity = match.group(0)
-            if entity and entity.lower() not in [term.lower() for term in search_terms]:
-                cap_entities.append(entity)
-        
-        # Add capitalized entities to search terms
-        for entity in cap_entities[:2]:
-            if len(search_terms) < 5:
-                search_terms.append(entity)
+            # Combine top meaningful word with domain concept
+            if meaningful_words and domain_concepts:
+                for concept in domain_concepts[:2]:
+                    if len(search_terms) < 5:
+                        search_terms.append(f"{meaningful_words[0]} {concept}")
     
     # Ensure we have at least some search terms
     if not search_terms and category != "general":
@@ -477,3 +1180,143 @@ def generate_search_terms(category, text):
             unique_terms.append(term)
     
     return unique_terms[:5]
+
+def get_primary_entity(entities, category):
+    """
+    Identify the primary entity from the list based on the category.
+    Returns the most important entity that should be the focus of searches.
+    """
+    if not entities:
+        return None
+    
+    # Different categories have different priority entity types
+    if category == "biology":
+        # For biology, prioritize organism types
+        organism_types = ["beetle", "insect", "arthropod", "bug", "species", 
+                         "plant", "animal", "organism", "bacteria"]
+        for organism in organism_types:
+            if organism in entities:
+                return organism
+    
+    elif category == "technology":
+        # For technology, prioritize platforms, languages, or systems
+        tech_types = ["algorithm", "software", "application", "system", "platform", 
+                     "language", "framework", "database", "network"]
+        for tech in tech_types:
+            if tech in entities:
+                return tech
+    
+    elif category == "history":
+        # For history, prioritize civilizations, events, or periods
+        history_types = ["empire", "civilization", "war", "revolution", "dynasty", 
+                        "kingdom", "period", "era", "century"]
+        for hist in history_types:
+            if hist in entities:
+                return hist
+    
+    elif category == "medicine":
+        # For medicine, prioritize conditions or treatments
+        med_types = ["disease", "syndrome", "disorder", "condition", "treatment", 
+                    "therapy", "procedure", "medication", "drug"]
+        for med in med_types:
+            if med in entities:
+                return med
+    
+    elif category == "agriculture":
+        # For agriculture, prioritize crops or farming methods
+        ag_types = ["crop", "plant", "seed", "farm", "farming", "cultivation", 
+                   "harvest", "soil", "irrigation"]
+        for ag in ag_types:
+            if ag in entities:
+                return ag
+    
+    elif category == "environment":
+        # For environment, prioritize ecosystems or environmental issues
+        env_types = ["ecosystem", "climate", "pollution", "conservation", "habitat", 
+                    "species", "biodiversity", "warming", "sustainability"]
+        for env in env_types:
+            if env in entities:
+                return env
+    
+    elif category == "economics":
+        # For economics, prioritize economic concepts or markets
+        econ_types = ["market", "economy", "industry", "trade", "investment", 
+                     "business", "company", "finance", "banking"]
+        for econ in econ_types:
+            if econ in entities:
+                return econ
+    
+    elif category == "politics":
+        # For politics, prioritize government structures or processes
+        pol_types = ["government", "policy", "election", "law", "legislation", 
+                    "democracy", "party", "president", "parliament"]
+        for pol in pol_types:
+            if pol in entities:
+                return pol
+    
+    elif category == "education":
+        # For education, prioritize institutional or learning concepts
+        edu_types = ["school", "university", "education", "learning", "teaching", 
+                    "curriculum", "course", "student", "study"]
+        for edu in edu_types:
+            if edu in entities:
+                return edu
+    
+    elif category == "literature":
+        # For literature, prioritize literary forms or elements
+        lit_types = ["novel", "book", "poem", "story", "character", "author", 
+                    "writer", "narrative", "plot", "theme"]
+        for lit in lit_types:
+            if lit in entities:
+                return lit
+    
+    # If no priority entity found, return the longest entity (likely most specific)
+    return max(entities, key=len) if entities else None
+
+def get_secondary_entities(entities, primary_entity, category):
+    """
+    Get secondary entities that complement the primary entity.
+    These are used to create more specific search terms.
+    """
+    if not entities:
+        return []
+    
+    # Remove primary entity from the list
+    filtered_entities = [e for e in entities if e != primary_entity]
+    
+    # Different categories have different secondary entity priorities
+    if category == "biology":
+        # For biology, prioritize anatomical parts, life stages, or behavior
+        bio_secondaries = ["abdomen", "thorax", "head", "wing", "antenna", "reproductive", 
+                          "larva", "pupa", "adult", "egg", "feeding", "mating", "development"]
+        return [e for e in filtered_entities if e in bio_secondaries][:3]
+    
+    elif category == "technology":
+        # For technology, prioritize technical aspects or components
+        tech_secondaries = ["architecture", "interface", "protocol", "module", "function", 
+                           "data", "security", "performance", "version", "feature"]
+        return [e for e in filtered_entities if e in tech_secondaries][:3]
+    
+    # Similar logic for other categories...
+    # Return longest entities if no specific secondary entities found
+    return sorted(filtered_entities, key=len, reverse=True)[:3]
+
+def get_domain_concepts(category):
+    """
+    Return domain-specific concept terms that can be used to create
+    meaningful search combinations.
+    """
+    concepts = {
+        "biology": ["taxonomy", "classification", "ecology", "evolution", "behavior"],
+        "technology": ["development", "implementation", "architecture", "standard", "specification"],
+        "history": ["historical", "ancient", "medieval", "colonial", "revolution"],
+        "medicine": ["treatment", "diagnosis", "symptom", "therapy", "clinical"],
+        "agriculture": ["cultivation", "production", "sustainable", "organic", "crop"],
+        "environment": ["conservation", "sustainable", "ecological", "climate", "protection"],
+        "economics": ["financial", "monetary", "fiscal", "economic", "market"],
+        "politics": ["policy", "governance", "legislation", "diplomatic", "electoral"],
+        "education": ["learning", "teaching", "academic", "curriculum", "educational"],
+        "literature": ["literary", "narrative", "critical", "poetic", "rhetorical"]
+    }
+    
+    return concepts.get(category, [])
