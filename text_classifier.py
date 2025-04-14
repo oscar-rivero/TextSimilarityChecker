@@ -258,11 +258,103 @@ def classify_text(text):
             "search_terms": []
         }
 
+def extract_biological_entities(text):
+    """
+    Extract meaningful biological entities from the text.
+    Focus on organism types, anatomical parts, and biological processes.
+    """
+    # Define biological and anatomical terms that would be important in descriptions
+    important_bio_terms = [
+        # Organism types
+        "beetle", "insect", "bug", "arthropod", "species", "specimen", "animal",
+        # Anatomical parts
+        "abdomen", "thorax", "head", "antenna", "wing", "leg", "segment", "exoskeleton",
+        "ovipositor", "mandible", "eye", "elytra", "pronotum", "testes", "oviduct",
+        # Life stages
+        "larva", "pupa", "nymph", "instar", "juvenile", "imago", "adult", "egg",
+        # Biological processes
+        "metamorphosis", "reproduction", "mating", "feeding", "development", 
+        "molting", "diapause", "reproductive", "copulation", "parasitizing",
+        # Physical characteristics
+        "coloration", "pattern", "size", "length", "width", "color", "shape"
+    ]
+    
+    # Compile patterns to identify important noun phrases
+    # Phrases like "adult beetle", "green coloration", "reproductive season"
+    noun_phrase_patterns = [
+        r'\b(?:the\s+)?([a-z]+)\s+(beetle|insect|bug|adult|larva|pupa)\b',  # adult beetle
+        r'\b(?:the\s+)?(beetle|insect|bug|adult|larva|pupa)\s+(?:is|has|with)\s+([a-z]+)\b',  # beetle is green
+        r'\b(?:the\s+)?(abdomen|thorax|head|wing|leg|antenna|ovipositor)\b',  # anatomical parts
+        r'\b(?:the\s+)?([a-z]+)\s+(abdomen|thorax|head|wing|leg|antenna)\b',  # green abdomen
+        r'\b(?:the\s+)?(reproductive|feeding|mating|development)\s+([a-z]+)\b',  # reproductive season
+        r'\b([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)\b'  # 6 millimetres long
+    ]
+
+    # Extract entities using patterns
+    entities = []
+    for pattern in noun_phrase_patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Get all groups from match
+            groups = match.groups()
+            # Extract useful phrases
+            for group in groups:
+                if group and len(group) > 2 and group.lower() not in ["the", "has", "is", "with"]:
+                    # Clean and add entity
+                    clean_entity = group.lower().strip()
+                    if clean_entity not in entities:
+                        entities.append(clean_entity)
+
+    # Extract single-word important biological terms
+    words = re.findall(r'\b([a-z]{3,})\b', text.lower())
+    for word in words:
+        if word in important_bio_terms and word not in entities:
+            entities.append(word)
+    
+    # Extract noun phrases with specific biological meaning
+    if "beetle" in text.lower() or "insect" in text.lower():
+        if "adult" in text.lower() and "adult beetle" not in entities and "beetle" not in entities:
+            entities.append("beetle")
+        if "young" in text.lower() and "larva" not in entities:
+            entities.append("larva")
+    
+    # Look for color descriptions as they're often important in insect identification
+    color_pattern = r'\b(?:is|are|appears|colou?red|coloration)\s+([a-z]+)\b'
+    color_matches = re.finditer(color_pattern, text, re.IGNORECASE)
+    for match in color_matches:
+        color = match.group(1).lower()
+        if color not in ["is", "are", "the", "and", "or", "very", "quite", "somewhat"]:
+            if color not in entities:
+                entities.append(color)
+    
+    return entities
+
+def extract_key_phrases(text):
+    """Extract key phrases that might be important for searching."""
+    phrases = []
+    
+    # Look for phrases that describe characteristics
+    patterns = [
+        r'([0-9]+(?:\.[0-9]+)?)\s+(mm|cm|millimeters|centimeters)\s+(?:long|wide|in length|in width)',  # Size descriptions
+        r'(green|yellow|brown|black|red|orange|blue|purple|white|grey|gray)\s+(?:in\s+)?colou?r',  # Color descriptions
+        r'([a-z]+)\s+(?:in\s+)?appearance',  # Appearance descriptions
+        r'(?:feeds|feeding)\s+on\s+([a-z\s]+)',  # Feeding habits
+        r'(?:live|lives|found)\s+(?:in|on)\s+([a-z\s]+)',  # Habitat descriptions
+        r'(?:during|in)\s+(?:its|the)\s+([a-z]+\s+[a-z]+)'  # Life cycle phases
+    ]
+    
+    for pattern in patterns:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in matches:
+            phrase = match.group(0).lower()
+            if phrase and len(phrase) > 5:  # Reasonable length for a phrase
+                phrases.append(phrase)
+    
+    return phrases
+
 def generate_search_terms(category, text):
     """Generate targeted search terms based on the identified category and text content."""
-    # Extract potential entities (nouns)
-    words = text.split()
-    entities = []
+    search_terms = []
     scientific_names = []
     
     # Look for scientific names (Latin binomials) - highest priority for biology texts
@@ -270,61 +362,118 @@ def generate_search_terms(category, text):
     for genus, species in latin_name_matches:
         scientific_names.append(f"{genus} {species}")
     
-    # Look for capitalized words that might be important entities
-    for word in words:
-        if word and word[0].isupper() and len(word) > 3:
-            # Remove any punctuation
-            clean_word = re.sub(r'[^\w\s]', '', word)
-            if clean_word and clean_word not in entities:
-                entities.append(clean_word)
-    
-    # Extract most common words (excluding stopwords)
-    features = extract_features(text)
-    common_words = features["word_freq"].most_common(5)
-    common_terms = [word for word, freq in common_words]
-    
-    # Generate search queries
-    search_terms = []
-    
-    # Handle specific categories differently
+    # Extract biological entities for biology texts
     if category == "biology":
-        # For biology, prioritize scientific names (if any)
-        for name in scientific_names[:2]:  # Top 2 scientific names
-            search_terms.append(name)
-            # Add scientific name with category for more precision
-            search_terms.append(f"{name} {category}")
-            # For encyclopedic content, searching with "wikipedia" is helpful
-            search_terms.append(f"{name} wikipedia")
+        # Get biological entities
+        bio_entities = extract_biological_entities(text)
         
-        # If no scientific names found, use regular entities with biology-specific context
-        if not scientific_names and entities:
-            search_terms.append(f"{entities[0]} {category}")
-            search_terms.append(f"{entities[0]} species")
-            # Add some common biology terms
-            if len(entities) >= 2:
-                search_terms.append(f"{entities[0]} {entities[1]}")
-    else:
-        # Standard search term generation for other categories
-        if category != "general" and category in CATEGORY_KEYWORDS:
-            # Include the most relevant entity with the category
-            if entities:
-                search_terms.append(f"{entities[0]} {category}")
+        # Prioritize scientific names if found
+        if scientific_names:
+            for name in scientific_names[:2]:  # Top 2 scientific names
+                search_terms.append(name)
+                # For encyclopedic content, searching with "wikipedia" is helpful
+                search_terms.append(f"{name} wikipedia")
+                # Add category for good measure
+                if len(search_terms) < 4:
+                    search_terms.append(f"{name} {category}")
+        
+        # Add primary biological entities
+        if bio_entities:
+            # Prioritize organism type (beetle, insect, etc.) if present
+            organism_types = ["beetle", "insect", "arthropod", "bug", "species"]
+            primary_entity = None
+            for organism in organism_types:
+                if organism in bio_entities:
+                    primary_entity = organism
+                    break
             
-            # Add a search combining common terms with the category
-            if common_terms:
-                search_terms.append(f"{common_terms[0]} {category}")
+            # Add primary entity searches
+            if primary_entity:
+                # Combine primary entity (e.g., "beetle") with category
+                if f"{primary_entity} {category}" not in search_terms:
+                    search_terms.append(f"{primary_entity} {category}")
+                
+                # If we have scientific name and primary entity, combine them
+                if scientific_names and f"{scientific_names[0]} {primary_entity}" not in search_terms:
+                    search_terms.append(f"{scientific_names[0]} {primary_entity}")
+                
+                # Add specialized search with Wikipedia for encyclopedic content
+                if f"{primary_entity} wikipedia" not in search_terms:
+                    search_terms.append(f"{primary_entity} wikipedia")
+            
+            # Add key anatomical or descriptive terms combined with the primary entity or category
+            anatomical_parts = ["abdomen", "thorax", "wing", "antenna", "ovipositor", "testes", "reproductive"]
+            for part in anatomical_parts:
+                if part in bio_entities and len(search_terms) < 5:
+                    if primary_entity:
+                        search_terms.append(f"{primary_entity} {part}")
+                    else:
+                        search_terms.append(f"{part} {category}")
+                    break  # Just add one anatomical search term
+            
+            # Add specific searches for remaining biological entities
+            remaining_entities = [e for e in bio_entities if e not in search_terms and not any(e in term for term in search_terms)]
+            for entity in remaining_entities[:2]:  # Limit to 2 more entities
+                if len(search_terms) < 5:
+                    if primary_entity and entity != primary_entity:
+                        search_terms.append(f"{primary_entity} {entity}")
+                    else:
+                        search_terms.append(entity)
         
-        # Add entity-based searches
-        for entity in entities[:2]:  # Limit to top 2 entities
-            search_terms.append(entity)
-        
-        # Add combination of entities if we have multiple
-        if len(entities) >= 2:
-            search_terms.append(f"{entities[0]} {entities[1]}")
+        # If still not enough search terms, add key phrases
+        if len(search_terms) < 5:
+            key_phrases = extract_key_phrases(text)
+            for phrase in key_phrases[:2]:  # Limit to 2 phrases
+                if len(search_terms) < 5 and len(phrase) < 30:  # Reasonable length 
+                    search_terms.append(phrase)
     
-    # Add entity with common word if available and not already added
-    if entities and common_terms and len(search_terms) < 5:
-        search_terms.append(f"{entities[0]} {common_terms[0]}")
+    else:
+        # For non-biology categories, fall back to original logic but with enhancements
+        # Extract features for common word identification
+        features = extract_features(text)
+        common_words = features["word_freq"].most_common(10)  # Get more words to have better choices
+        
+        # Filter for meaningful words (not just common but potentially meaningless words)
+        meaningful_words = [word for word, _ in common_words if len(word) > 3 and not word.startswith('the')]
+        
+        if meaningful_words:
+            # Add category-specific search with most meaningful word
+            search_terms.append(f"{meaningful_words[0]} {category}")
+            
+            # Add the top meaningful word by itself
+            search_terms.append(meaningful_words[0])
+            
+            # Add combination of top meaningful words
+            if len(meaningful_words) >= 2:
+                search_terms.append(f"{meaningful_words[0]} {meaningful_words[1]}")
+            
+            # Add more meaningful words if needed
+            for word in meaningful_words[2:5]:
+                if len(search_terms) < 5:
+                    search_terms.append(word)
+        
+        # Look for capitalized entities as they might be important
+        cap_entities = []
+        for match in re.finditer(r'\b[A-Z][a-zA-Z]{3,}\b', text):
+            entity = match.group(0)
+            if entity and entity.lower() not in [term.lower() for term in search_terms]:
+                cap_entities.append(entity)
+        
+        # Add capitalized entities to search terms
+        for entity in cap_entities[:2]:
+            if len(search_terms) < 5:
+                search_terms.append(entity)
+    
+    # Ensure we have at least some search terms
+    if not search_terms and category != "general":
+        search_terms.append(category)
     
     # Remove duplicates and limit to max 5 search terms
-    return list(dict.fromkeys(search_terms))[:5]
+    # Convert to lowercase for easier comparison
+    unique_terms = []
+    for term in search_terms:
+        term_lower = term.lower()
+        if not any(term_lower == t.lower() for t in unique_terms):
+            unique_terms.append(term)
+    
+    return unique_terms[:5]
