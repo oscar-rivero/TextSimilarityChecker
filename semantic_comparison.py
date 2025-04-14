@@ -49,40 +49,58 @@ def lemmatize_text(text):
     """
     Tokenize, POS tag, and lemmatize text
     """
-    # Tokenize text
-    tokens = word_tokenize(text.lower())
-    
-    # Remove punctuation
-    tokens = [token for token in tokens if token not in string.punctuation]
-    
-    # POS tag
-    tagged_tokens = nltk.pos_tag(tokens)
-    
-    # Lemmatize according to POS
-    lemmas = []
-    for word, tag in tagged_tokens:
-        pos = get_wordnet_pos(tag)
-        if pos:
-            lemma = lemmatizer.lemmatize(word, pos=pos)
-        else:
-            lemma = lemmatizer.lemmatize(word)
+    try:
+        # Tokenize text
+        tokens = word_tokenize(text.lower())
         
-        # Add non-stopwords to the lemmas list
-        if lemma.lower() not in stopwords and len(lemma) > 1:
-            lemmas.append(lemma.lower())
-            
-    return lemmas
+        # Remove punctuation
+        tokens = [token for token in tokens if token not in string.punctuation]
+        
+        # POS tag
+        tagged_tokens = nltk.pos_tag(tokens)
+        
+        # Lemmatize according to POS
+        lemmas = []
+        for word, tag in tagged_tokens:
+            try:
+                pos = get_wordnet_pos(tag)
+                if pos:
+                    lemma = lemmatizer.lemmatize(word, pos=pos)
+                else:
+                    lemma = lemmatizer.lemmatize(word)
+                
+                # Add non-stopwords to the lemmas list
+                if lemma.lower() not in stopwords and len(lemma) > 1:
+                    lemmas.append(lemma.lower())
+            except Exception as e:
+                logger.warning(f"Error lemmatizing word '{word}': {str(e)}")
+                # Fall back to the original word if lemmatization fails
+                if word.lower() not in stopwords and len(word) > 1:
+                    lemmas.append(word.lower())
+                
+        return lemmas
+    except Exception as e:
+        logger.error(f"Error in lemmatize_text: {str(e)}")
+        # Fall back to simple tokenization
+        return [w.lower() for w in text.lower().split() if w.lower() not in stopwords and len(w) > 1]
 
 def find_synonyms(word):
     """
     Find all synonyms for a word using WordNet
     """
     synonyms = set()
-    for syn in wordnet.synsets(word):
-        for lemma in syn.lemmas():
-            synonym = lemma.name().lower().replace('_', ' ')
-            if synonym != word:
-                synonyms.add(synonym)
+    try:
+        for syn in wordnet.synsets(word):
+            try:
+                for lemma in syn.lemmas():
+                    synonym = lemma.name().lower().replace('_', ' ')
+                    if synonym != word:
+                        synonyms.add(synonym)
+            except Exception as e:
+                logger.warning(f"Error getting lemmas for '{word}': {str(e)}")
+                continue
+    except Exception as e:
+        logger.warning(f"Error getting synsets for '{word}': {str(e)}")
     return list(synonyms)
 
 def calculate_semantic_similarity(text1, text2):
@@ -123,19 +141,29 @@ def calculate_semantic_similarity(text1, text2):
             
             # Collect all synonyms, hypernyms, and hyponyms
             for syn in synsets1:
-                # Add synonyms (lemma names)
-                for lemma in syn.lemmas():
-                    synonyms1.add(lemma.name().lower())
+                # Add synonyms (lemma names) - with error handling
+                try:
+                    for lemma in syn.lemmas():
+                        synonyms1.add(lemma.name().lower())
+                except Exception as e:
+                    logger.warning(f"Error getting lemmas for synonyms: {str(e)}")
+                    continue
                 
-                # Add hypernyms (more general terms)
-                for hypernym in syn.hypernyms():
-                    for lemma in hypernym.lemmas():
-                        hypernyms1.add(lemma.name().lower())
+                # Add hypernyms (more general terms) - with error handling
+                try:
+                    for hypernym in syn.hypernyms():
+                        for lemma in hypernym.lemmas():
+                            hypernyms1.add(lemma.name().lower())
+                except Exception as e:
+                    logger.warning(f"Error getting hypernyms: {str(e)}")
                 
-                # Add hyponyms (more specific terms)
-                for hyponym in syn.hyponyms():
-                    for lemma in hyponym.lemmas():
-                        hyponyms1.add(lemma.name().lower())
+                # Add hyponyms (more specific terms) - with error handling
+                try:
+                    for hyponym in syn.hyponyms():
+                        for lemma in hyponym.lemmas():
+                            hyponyms1.add(lemma.name().lower())
+                except Exception as e:
+                    logger.warning(f"Error getting hyponyms: {str(e)}")
             
             # Remove underscores from multi-word terms
             synonyms1 = {s.replace('_', ' ') for s in synonyms1}
@@ -156,14 +184,17 @@ def calculate_semantic_similarity(text1, text2):
                 synsets2 = wordnet.synsets(word2)
                 
                 for syn2 in synsets2:
-                    # Check if they share a common hypernym
-                    for hypernym in syn2.hypernyms():
-                        hypernym_lemmas = {lemma.name().lower().replace('_', ' ') for lemma in hypernym.lemmas()}
-                        
-                        # If they share a common hypernym, they're related
-                        if any(h in hypernym_lemmas for h in hypernyms1):
-                            semantic_matches.append((word1, word2))
-                            break
+                    # Check if they share a common hypernym - with error handling
+                    try:
+                        for hypernym in syn2.hypernyms():
+                            hypernym_lemmas = {lemma.name().lower().replace('_', ' ') for lemma in hypernym.lemmas()}
+                            
+                            # If they share a common hypernym, they're related
+                            if any(h in hypernym_lemmas for h in hypernyms1):
+                                semantic_matches.append((word1, word2))
+                                break
+                    except Exception as e:
+                        logger.warning(f"Error checking hypernyms for semantic relation: {str(e)}")
                     
                     # Check if word2's synsets match word1's hypernyms or hyponyms
                     for lemma in syn2.lemmas():
@@ -281,16 +312,24 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                     if len(noun1) <= 3:  # Increased minimum length for nouns
                         continue
                         
-                    synsets1 = wordnet.synsets(noun1, pos=wordnet.NOUN)
-                    
-                    if not synsets1:
-                        continue
+                    try:
+                        synsets1 = wordnet.synsets(noun1, pos=wordnet.NOUN)
                         
-                    # Get all synonyms
-                    synonyms1 = set()
-                    for syn in synsets1:
-                        for lemma in syn.lemmas():
-                            synonyms1.add(lemma.name().lower().replace('_', ' '))
+                        if not synsets1:
+                            continue
+                            
+                        # Get all synonyms
+                        synonyms1 = set()
+                        for syn in synsets1:
+                            try:
+                                for lemma in syn.lemmas():
+                                    synonyms1.add(lemma.name().lower().replace('_', ' '))
+                            except Exception as e:
+                                logger.warning(f"Error processing noun lemmas: {str(e)}")
+                                continue
+                    except Exception as e:
+                        logger.warning(f"Error getting noun synsets: {str(e)}")
+                        continue
                     
                     # Check if any noun in the second text is a synonym
                     for noun2 in nouns2:
@@ -305,16 +344,24 @@ def find_semantic_matching_phrases(text1, text2, min_length=4):
                     if len(verb1) <= 3:  # Increased minimum length for verbs
                         continue
                         
-                    synsets1 = wordnet.synsets(verb1, pos=wordnet.VERB)
-                    
-                    if not synsets1:
-                        continue
+                    try:
+                        synsets1 = wordnet.synsets(verb1, pos=wordnet.VERB)
                         
-                    # Get all synonyms
-                    synonyms1 = set()
-                    for syn in synsets1:
-                        for lemma in syn.lemmas():
-                            synonyms1.add(lemma.name().lower().replace('_', ' '))
+                        if not synsets1:
+                            continue
+                            
+                        # Get all synonyms
+                        synonyms1 = set()
+                        for syn in synsets1:
+                            try:
+                                for lemma in syn.lemmas():
+                                    synonyms1.add(lemma.name().lower().replace('_', ' '))
+                            except Exception as e:
+                                logger.warning(f"Error processing verb lemmas: {str(e)}")
+                                continue
+                    except Exception as e:
+                        logger.warning(f"Error getting verb synsets: {str(e)}")
+                        continue
                     
                     # Check if any verb in the second text is a synonym
                     for verb2 in verbs2:
