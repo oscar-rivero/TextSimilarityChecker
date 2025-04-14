@@ -147,14 +147,20 @@
                     <h2 class="h4 mb-3">Matching Sources</h2>
                     {% for result in results %}
                         <div class="card results-card mb-3 {% if result.relevance_score > 1000 %}border-success border-2{% elif result.relevance_score > 500 %}border-primary{% elif result.relevance_score > 250 %}border-info{% endif %}">
-                            {% if result.category_tag %}
-                                <!-- Category Tag - As a top banner -->
-                                <div class="card-category-banner">
-                                    <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
-                                        {{ result.category_tag }}
-                                    </span>
-                                </div>
-                            {% endif %}
+                            <!-- Always show category banner - use source URL to determine if Wikipedia -->
+                            <div class="card-category-banner">
+                                {% if result.source.url and 'wikipedia.org' in result.source.url %}
+                                    <span class="badge category-tag wikipedia-tag text-white">Wikipedia</span>
+                                {% else %}
+                                    {% if result.category_tag %}
+                                        <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
+                                            {{ result.category_tag }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge category-tag general-tag text-white">General</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                             
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center">
