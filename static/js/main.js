@@ -181,8 +181,9 @@ function initializeCharts() {
             if (!item || !item.source) {
                 return 'Unknown Source';
             }
-            // Get category tag if available
-            const categoryTag = item.category_tag ? `[${item.category_tag}] ` : '';
+            // Get category tag if available - safely check if property exists
+            const categoryTag = (item.category_tag && typeof item.category_tag === 'string') ? 
+                `[${item.category_tag}] ` : '';
             
             // Truncate long titles
             let title = item.source.title || 'Unnamed Source';
@@ -199,13 +200,14 @@ function initializeCharts() {
         
         const backgroundColors = data.map(item => {
             // Use relevance score if available for better color indication
-            if (item.relevance_score && item.relevance_score > 2000) {
+            const relevanceScore = item.relevance_score ? parseInt(item.relevance_score) : 0;
+            if (relevanceScore > 2000) {
                 return '#dc3545'; // Critical match - red
             }
-            if (item.relevance_score && item.relevance_score > 1000) {
+            if (relevanceScore > 1000) {
                 return '#9c27b0'; // Very high relevance - purple
             }
-            if (item.relevance_score && item.relevance_score > 500) {
+            if (relevanceScore > 500) {
                 return '#fd7e14'; // High relevance - orange
             }
             
@@ -258,50 +260,73 @@ function initializeCharts() {
                     tooltip: {
                         callbacks: {
                             title: function(tooltipItems) {
-                                const index = tooltipItems[0].dataIndex;
-                                return data[index].source.title || 'Unnamed Source';
+                                try {
+                                    const index = tooltipItems[0].dataIndex;
+                                    if (data && data[index] && data[index].source) {
+                                        return data[index].source.title || 'Unnamed Source';
+                                    }
+                                    return 'Source';
+                                } catch (e) {
+                                    console.warn('Error getting tooltip title:', e);
+                                    return 'Source';
+                                }
                             },
                             afterTitle: function(tooltipItems) {
-                                const index = tooltipItems[0].dataIndex;
-                                const url = data[index].source.url || '';
-                                
-                                // Add category tag if available
-                                let category = '';
-                                if (data[index].category_tag) {
-                                    category = `\nCategory: ${data[index].category_tag}`;
-                                }
-                                
-                                // Add relevance score if available
-                                let relevance = '';
-                                if (data[index].relevance_score) {
-                                    const relevanceScore = parseInt(data[index].relevance_score);
-                                    let relevanceText = 'Low';
-                                    if (relevanceScore > 2000) relevanceText = 'Extremely High';
-                                    else if (relevanceScore > 1000) relevanceText = 'Very High';
-                                    else if (relevanceScore > 500) relevanceText = 'High';
-                                    else if (relevanceScore > 250) relevanceText = 'Medium';
+                                try {
+                                    const index = tooltipItems[0].dataIndex;
+                                    if (!data || !data[index]) return '';
                                     
-                                    relevance = `\nRelevance: ${relevanceText}`;
+                                    // Get URL safely
+                                    const url = (data[index].source && data[index].source.url) ? 
+                                        data[index].source.url : '';
+                                    
+                                    // Add category tag if available
+                                    let category = '';
+                                    if (data[index].category_tag && typeof data[index].category_tag === 'string') {
+                                        category = `\nCategory: ${data[index].category_tag}`;
+                                    }
+                                    
+                                    // Add relevance score if available
+                                    let relevance = '';
+                                    if (data[index].relevance_score) {
+                                        const relevanceScore = parseInt(data[index].relevance_score) || 0;
+                                        let relevanceText = 'Low';
+                                        if (relevanceScore > 2000) relevanceText = 'Extremely High';
+                                        else if (relevanceScore > 1000) relevanceText = 'Very High';
+                                        else if (relevanceScore > 500) relevanceText = 'High';
+                                        else if (relevanceScore > 250) relevanceText = 'Medium';
+                                        
+                                        relevance = `\nRelevance: ${relevanceText}`;
+                                    }
+                                    
+                                    return url + category + relevance;
+                                } catch (e) {
+                                    console.warn('Error getting tooltip afterTitle:', e);
+                                    return '';
                                 }
-                                
-                                return url + category + relevance;
                             },
                             label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
+                                try {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '%';
+                                    }
+                                    
+                                    // Add match count if available
+                                    const index = context.dataIndex;
+                                    if (data && data[index] && data[index].matches && 
+                                        Array.isArray(data[index].matches) && data[index].matches.length) {
+                                        label += ` (${data[index].matches.length} matches)`;
+                                    }
+                                    
+                                    return label;
+                                } catch (e) {
+                                    console.warn('Error getting tooltip label:', e);
+                                    return 'Similarity';
                                 }
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y + '%';
-                                }
-                                
-                                // Add match count if available
-                                const index = context.dataIndex;
-                                if (data[index].matches && data[index].matches.length) {
-                                    label += ` (${data[index].matches.length} matches)`;
-                                }
-                                
-                                return label;
                             }
                         }
                     }
