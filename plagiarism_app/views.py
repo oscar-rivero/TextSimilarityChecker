@@ -41,12 +41,12 @@ def check(request):
         request.session['original_text'] = text
         
         # Generate report data
-        report_data = generate_report(text, results)
+        report = generate_report(text, results)
         
         return render(request, 'results.html', {
             'results': results, 
             'original_text': text, 
-            'report_data': report_data
+            'report': report
         })
     
     except Exception as e:
@@ -65,9 +65,9 @@ def report(request):
             return JsonResponse({"error": "No plagiarism check results found. Please perform a check first."}, status=400)
         
         # Generate report data
-        report_data = generate_report(original_text, results)
+        report = generate_report(original_text, results)
         
-        return JsonResponse(report_data)
+        return JsonResponse(report)
     
     except Exception as e:
         logger.error(f"Error generating report: {str(e)}")
