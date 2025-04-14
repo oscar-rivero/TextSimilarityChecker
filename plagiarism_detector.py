@@ -11,6 +11,7 @@ from collections import Counter
 from difflib import SequenceMatcher
 import json
 from web_scraper import get_website_text_content
+import semantic_comparison
 
 # Download NLTK resources
 try:
@@ -121,6 +122,7 @@ def check_plagiarism(text):
     2. Searching each chunk online
     3. Comparing the text with search results
     4. Identifying matching content
+    5. Performing semantic analysis to detect paraphrased content
     """
     logger.debug("Starting plagiarism check")
     
@@ -137,6 +139,7 @@ def check_plagiarism(text):
     search_queries = search_queries[:5]
     
     results = []
+    source_texts = []  # Store source texts for semantic comparison
     
     # For each query, search online and compare results
     for query in search_queries:
@@ -154,6 +157,14 @@ def check_plagiarism(text):
                 
                 if not source_content:
                     continue
+                
+                # Store source text for semantic comparison
+                source_texts.append({
+                    "content": source_content,
+                    "title": result["title"],
+                    "url": source_url,
+                    "snippet": result["snippet"]
+                })
                 
                 # Process source content
                 processed_source = preprocess_text(source_content)
@@ -176,10 +187,58 @@ def check_plagiarism(text):
                             "snippet": result["snippet"]
                         },
                         "similarity": similarity_percent,
-                        "matches": matches
+                        "matches": matches,
+                        "semantic_matches": []  # Will be filled later
                     })
             except Exception as e:
                 logger.error(f"Error processing source {result.get('link', 'unknown')}: {str(e)}")
+    
+    # Perform semantic comparison if we have sources to compare
+    if source_texts:
+        try:
+            logger.info(f"Performing semantic comparison with {len(source_texts)} sources")
+            semantic_results = semantic_comparison.check_semantic_plagiarism(text, source_texts)
+            
+            # Merge lexical and semantic results
+            merged_results = []
+            
+            # Track seen URLs to avoid duplicates
+            semantic_urls = {r["source"]["url"]: r for r in semantic_results}
+            lexical_urls = {r["source"]["url"]: r for r in results}
+            
+            # Process all unique URLs
+            all_urls = set(list(semantic_urls.keys()) + list(lexical_urls.keys()))
+            
+            for url in all_urls:
+                if url in lexical_urls and url in semantic_urls:
+                    # Merge the two results
+                    lex_result = lexical_urls[url]
+                    sem_result = semantic_urls[url]
+                    
+                    # Use the higher similarity score
+                    if sem_result["similarity"] > lex_result["similarity"]:
+                        lex_result["similarity"] = sem_result["similarity"]
+                    
+                    # Add semantic matches
+                    lex_result["semantic_matches"] = sem_result.get("semantic_matches", [])
+                    
+                    # Combine matches, avoiding duplicates by using text as key
+                    existing_matches = {m["original"]: m for m in lex_result["matches"]}
+                    for match in sem_result.get("matches", []):
+                        if match["original"] not in existing_matches:
+                            lex_result["matches"].append(match)
+                    
+                    merged_results.append(lex_result)
+                elif url in lexical_urls:
+                    merged_results.append(lexical_urls[url])
+                else:
+                    merged_results.append(semantic_urls[url])
+            
+            # Replace results with merged results
+            results = merged_results
+            
+        except Exception as e:
+            logger.error(f"Error in semantic comparison: {str(e)}")
     
     # Sort results by similarity (descending)
     results.sort(key=lambda x: x["similarity"], reverse=True)

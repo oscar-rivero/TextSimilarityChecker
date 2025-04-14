@@ -73,3 +73,24 @@
     color: #6c757d;
     font-size: 0.875rem;
 }
+
+/* Semantic matches styling */
+.semantic-match {
+    display: flex;
+    align-items: center;
+}
+
+.semantic-match-original {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.semantic-match-arrow {
+    margin: 0 10px;
+    color: #6c757d;
+}
+
+.semantic-match-paraphrased {
+    color: #28a745;
+    font-weight: 500;
+}

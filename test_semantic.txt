@@ -1,0 +1,1 @@
+Testing the semantic comparison functionality. I've implemented WordNet-based synonym detection and semantic paraphrase analysis based on the GitHub repository. This should help identify plagiarized content even when words have been changed to synonyms.
