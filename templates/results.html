@@ -83,7 +83,7 @@
                                         0.00%
                                     {% endif %}
                                 </p>
-                                <p class="mb-0">
+                                <p class="mb-1">
                                     <strong>Matching Phrases:</strong>
                                     {% if results|length > 0 %}
                                         {% with total_matches=0 %}
@@ -101,6 +101,26 @@
                                         0
                                     {% endif %}
                                 </p>
+                                
+                                <!-- Source categories summary -->
+                                <p class="mb-1"><strong>Source Categories:</strong></p>
+                                <div class="d-flex flex-wrap mb-2">
+                                    {% for result in results %}
+                                        {% if forloop.counter <= 5 %}
+                                            <span class="badge {% if result.category_tag == 'Wikipedia' %}bg-success{% else %}bg-secondary{% endif %} me-1 mb-1">
+                                                {{ result.category_tag }}
+                                            </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Top match info -->
+                                {% if results.0.relevance_score > 1000 %}
+                                <p class="mb-0 text-danger">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> High plagiarism risk detected</strong> - 
+                                    Found exact content matches in {{ results.0.category_tag }} sources.
+                                </p>
+                                {% endif %}
                             {% else %}
                                 <p class="mb-0">
                                     <strong>Result:</strong> No plagiarism detected
@@ -126,15 +146,36 @@
                 {% if results|length > 0 %}
                     <h2 class="h4 mb-3">Matching Sources</h2>
                     {% for result in results %}
-                        <div class="card results-card mb-3">
+                        <div class="card results-card mb-3 {% if result.relevance_score > 1000 %}border-success border-2{% elif result.relevance_score > 500 %}border-primary{% elif result.relevance_score > 250 %}border-info{% endif %}">
+                            <div class="card-header">
+                                {% if result.relevance_score > 1000 %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check-circle"></i> Highly Relevant
+                                        </span>
+                                        {% if result.relevance_score > 2000 %}
+                                            <span class="badge bg-danger me-2">
+                                                <i class="fas fa-exclamation-triangle"></i> Exact Match
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                {% elif result.relevance_score > 500 %}
+                                    <span class="badge bg-primary">Relevant</span>
+                                {% endif %}
+                            </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h3 class="h5 mb-0">
-                                        <a href="{{ result.source.url }}" target="_blank" class="text-decoration-none">
-                                            {{ result.source.title }}
-                                            <i class="fas fa-external-link-alt ms-1 small"></i>
-                                        </a>
-                                    </h3>
+                                    <div>
+                                        <h3 class="h5 mb-0">
+                                            <a href="{{ result.source.url }}" target="_blank" class="text-decoration-none">
+                                                {{ result.source.title }}
+                                                <i class="fas fa-external-link-alt ms-1 small"></i>
+                                            </a>
+                                        </h3>
+                                        {% if result.category_tag %}
+                                            <span class="badge bg-info text-white mt-1">{{ result.category_tag }}</span>
+                                        {% endif %}
+                                    </div>
                                     <span class="badge {% if result.similarity > 50 %}similarity-high{% elif result.similarity > 30 %}similarity-medium{% else %}similarity-low{% endif %} similarity-badge">
                                         {{ result.similarity|floatformat:2 }}% Similar
                                     </span>
