@@ -29,44 +29,11 @@ logger = logging.getLogger(__name__)
 def search_online(query, num_results=5):
     """
     Search for the query text online using SerpAPI.
-    In safe mode, specifically include Wikipedia for Gratiana boliviana.
     """
     try:
-        # First, check if the query might be a direct copy-paste of content
-        # This addresses the exact issue of finding content like "The young adult is green in color and turns yellow as it ages"
-        if len(query) > 40 and "green" in query.lower() and "yellow" in query.lower() and "adult" in query.lower():
-            logger.info(f"Likely direct copy-paste detected in query: {query[:50]}...")
-            
-            # Add Wikipedia result for Gratiana boliviana as it's likely the source
-            special_results = [
-                {
-                    "title": "Gratiana boliviana - Wikipedia",
-                    "link": "https://en.wikipedia.org/wiki/Gratiana_boliviana",
-                    "snippet": "The young adult is green in color and turns yellow as it ages. It is pale brown during its overwintering stage."
-                },
-                {
-                    "title": "Indian River Lagoon Species Inventory - Gratiana boliviana",
-                    "link": "https://irlspecies.org/taxa/index.php?taxon=Gratiana%20boliviana",
-                    "snippet": "Gratiana boliviana is a species of beetle in the leaf beetle family, Chrysomelidae. Its common name is tropical soda apple leaf beetle."
-                }
-            ]
-            wiki_added = True
-            
-        # Also check explicitly for Gratiana boliviana mentions
-        elif "Gratiana boliviana" in query or "gratiana boliviana" in query.lower() or ("wikipedia" in query.lower() and "gratiana" in query.lower()):
-            logger.info(f"Special query detected for Gratiana boliviana: {query}")
-            # Add Wikipedia result specifically for Gratiana boliviana
-            special_results = [
-                {
-                    "title": "Gratiana boliviana - Wikipedia",
-                    "link": "https://en.wikipedia.org/wiki/Gratiana_boliviana",
-                    "snippet": "Gratiana boliviana is a species of tortoise beetle. It is used as a biological control agent against tropical soda apple."
-                }
-            ]
-            wiki_added = True
-        else:
-            special_results = []
-            wiki_added = False
+        # No special cases - simple search only
+        special_results = []
+        wiki_added = False
         
         # Get API key from environment variable
         api_key = os.environ.get("SERPAPI_KEY")
@@ -154,15 +121,7 @@ def search_online(query, num_results=5):
                     "snippet": snippet if isinstance(snippet, str) else ""
                 })
                 
-            # If we specifically want Gratiana boliviana from Wikipedia and it's not there, add it
-            if not wiki_added and ("Gratiana boliviana" in query or "gratiana boliviana" in query.lower()):
-                wiki_url = "https://en.wikipedia.org/wiki/Gratiana_boliviana"
-                if wiki_url not in existing_urls:
-                    processed_results.append({
-                        "title": "Gratiana boliviana - Wikipedia",
-                        "link": wiki_url,
-                        "snippet": "Gratiana boliviana is a species of tortoise beetle. It is used as a biological control agent against tropical soda apple."
-                    })
+            # No special cases for specific queries
                 
             return processed_results
             
@@ -323,31 +282,8 @@ def check_plagiarism(text):
     # Preprocess the input text
     processed_text = preprocess_text(text)
     
-    # Handle the case where the user has manually input problematic search terms
-    # This is a direct check for the testing scenario
-    if isinstance(text, str) and text.strip() in [
-        "The young wikipedia", "The young biology", "The adult wikipedia", "beetle biology", "The young beetle"
-    ]:
-        # Replace problematic query with a better one based on linguistic structure
-        if "beetle" in text.lower():
-            classification_result = {
-                "primary_category": "biology",
-                "primary_score": 5.0,
-                "top_categories": [("biology", 5.0)],
-                "search_terms": ["beetle biology", "insect anatomy", "coleoptera life cycle"]
-            }
-        else:
-            # If they submitted just "The young" or similar as a test, use a generic biology term
-            classification_result = {
-                "primary_category": "biology",
-                "primary_score": 3.0,
-                "top_categories": [("biology", 3.0)],
-                "search_terms": ["insect biology", "animal development"]
-            }
-        logger.info(f"Detected test of problematic terms, using predefined classification")
-    else:
-        # Normal processing path - classify the text to determine its category
-        classification_result = text_classifier.classify_text(text)
+    # Normal processing path - classify the text to determine its category
+    classification_result = text_classifier.classify_text(text)
     
     logger.info(f"Text classified as: {classification_result['primary_category']} (score: {classification_result['primary_score']:.2f})")
     
@@ -380,9 +316,7 @@ def check_plagiarism(text):
         # If we reach here, the term is acceptable
         filtered_search_terms.append(term)
     
-    # Add replacements for any filtered terms if needed
-    if "beetle" in text.lower() and not any("beetle" in term.lower() for term in filtered_search_terms):
-        filtered_search_terms.append("beetle biology")
+    # No special cases for specific terms
     
     # If we filtered out all terms, add a fallback
     if not filtered_search_terms:
@@ -668,31 +602,16 @@ def check_plagiarism(text):
             # Look for matches and give higher relevance to longer matches
             for match in result.get("matches", []):
                 original_match = match.get("original", "").lower()
-                    
-                # More general boost for significant matches 
-                if len(original_match.split()) >= 5:  # Longer matches are more significant
-                    relevance_score += len(original_match.split()) * 15  # Boost based on length
+                
+                # Boost based on length - longer matches are more significant
+                if len(original_match.split()) >= 5:
+                    relevance_score += len(original_match.split()) * 15
             
-            # Assign a category tag based on URL and title
+            # Assign a category tag based on URL and title - no special cases
             if "wikipedia" in source_url.lower():
                 result["category_tag"] = "Wikipedia"
-                # Boost Wikipedia more for specific topics
-                if "historiography" in source_url.lower() or "history" in source_url.lower():
-                    relevance_score += 300  # Higher boost for Wikipedia history articles
-                else:
-                    relevance_score += 150  # Standard Wikipedia boost
-            elif "biology" in source_url.lower() or "biology" in source_title.lower():
-                result["category_tag"] = "Biology"
-                relevance_score += 100
-            elif "science" in source_url.lower() or "science" in source_title.lower():
-                result["category_tag"] = "Science"
-                relevance_score += 80
-            elif "education" in source_url.lower() or "edu" in source_url.lower():
-                result["category_tag"] = "Education"
-                relevance_score += 70
-            elif "insect" in source_url.lower() or "beetle" in source_url.lower():
-                result["category_tag"] = "Entomology" 
-                relevance_score += 120
+                # Standard boost for Wikipedia
+                relevance_score += 150
             else:
                 # Classify content and assign most relevant tag
                 source_content = result.get("source_content", "")
@@ -763,28 +682,6 @@ def generate_report(original_text, results):
     # Clean up and filter search terms to avoid showing problematic ones
     problematic_terms = ["the young", "the adult", "young", "adult", "the"]
     
-    # Check if this is about Ethiopian historiography
-    is_ethiopian_history = False
-    if "ethiopian historiography" in original_text.lower() or (
-        "historiography" in original_text.lower() and "ethiopia" in original_text.lower()):
-        is_ethiopian_history = True
-        # For Ethiopian historiography, treat biology as a problematic term
-        problematic_terms.extend(["biology", "biological", "species", "specimen"])
-        
-        # Make sure we have proper historiography terms
-        historiography_terms = [
-            "Ethiopian historiography",
-            "literature of Ethiopian historiography",
-            "history of Ethiopia"
-        ]
-        classification["search_terms"] = [term for term in classification["search_terms"] 
-                                         if term.lower() != "biology" and not term.lower().startswith("biology ")]
-        
-        # Add historiography terms if they're not there
-        for term in historiography_terms:
-            if term not in classification["search_terms"]:
-                classification["search_terms"].insert(0, term)
-    
     # Filter out any problematic search terms from the classification
     filtered_search_terms = []
     for term in classification["search_terms"]:
@@ -792,21 +689,9 @@ def generate_report(original_text, results):
             not any(term.lower().startswith(p.lower() + " ") for p in ["the", "a", "an"])):
             filtered_search_terms.append(term)
     
-    # If we input one of our test terms directly, show better terms
-    if isinstance(original_text, str) and original_text.strip() in [
-        "The young wikipedia", "The young biology", "The adult wikipedia", "beetle biology", "The young beetle"
-    ]:
-        if "beetle" in original_text.lower():
-            filtered_search_terms = ["beetle biology", "insect anatomy", "coleoptera life cycle"]
-        else:
-            filtered_search_terms = ["insect biology", "animal development"]
-    
     # Add a generic fallback if all terms were filtered out
     if not filtered_search_terms:
-        if "beetle" in original_text.lower():
-            filtered_search_terms = ["beetle biology", "insect anatomy"]
-        else:
-            filtered_search_terms = [primary_category]
+        filtered_search_terms = [primary_category]
     
     # Create report data
     report = {
