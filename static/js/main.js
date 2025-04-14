@@ -189,7 +189,7 @@ function initializeCharts() {
             let title = item.source.title || 'Unnamed Source';
             title = title.length > 25 ? title.substring(0, 22) + '...' : title;
             
-            // Combine category and title
+            // Combine category and title - show category prominently
             return categoryTag + title;
         });
         
@@ -199,7 +199,22 @@ function initializeCharts() {
         });
         
         const backgroundColors = data.map(item => {
-            // Use relevance score if available for better color indication
+            // Color based on category - use category-specific colors
+            if (item.category_tag) {
+                const category = item.category_tag.toLowerCase();
+                
+                // Match our CSS colors
+                if (category === 'wikipedia') return '#28a745'; // Wikipedia - green
+                if (category === 'biology') return '#6610f2'; // Biology - purple
+                if (category === 'history') return '#fd7e14'; // History - orange
+                if (category === 'literature') return '#6f42c1'; // Literature - violet
+                if (category === 'technology') return '#20c997'; // Technology - teal
+                if (category === 'science') return '#0dcaf0'; // Science - cyan
+                if (category === 'medical') return '#dc3545'; // Medical - red
+                if (category === 'academic') return '#6c757d'; // Academic - gray
+            }
+            
+            // Fallback to relevance score
             const relevanceScore = item.relevance_score ? parseInt(item.relevance_score) : 0;
             if (relevanceScore > 2000) {
                 return '#dc3545'; // Critical match - red

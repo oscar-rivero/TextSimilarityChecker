@@ -66,9 +66,50 @@
     letter-spacing: 0.03em;
 }
 
+/* Source category styling - different colors for different categories */
+.badge.category-tag {
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    padding: 0.35em 0.65em;
+    margin-right: 0.25rem;
+}
+
 /* Wikipedia category special styling */
 .badge.wikipedia-tag {
     background-color: #28a745 !important;
+}
+
+/* Other category tags */
+.badge.biology-tag {
+    background-color: #6610f2 !important;
+}
+
+.badge.history-tag {
+    background-color: #fd7e14 !important;
+}
+
+.badge.literature-tag {
+    background-color: #6f42c1 !important;
+}
+
+.badge.technology-tag {
+    background-color: #20c997 !important;
+}
+
+.badge.science-tag {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.academic-tag {
+    background-color: #6c757d !important;
+}
+
+.badge.medical-tag {
+    background-color: #dc3545 !important;
+}
+
+.badge.general-tag {
+    background-color: #6c757d !important;
 }
 
 /* Relevance indicators */
