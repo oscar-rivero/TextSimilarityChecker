@@ -32,21 +32,39 @@
                             {% if results %}
                                 <p class="mb-1">
                                     <strong>Average Similarity:</strong>
-                                    {% with avg_similarity=0 %}
-                                        {% for result in results %}
-                                            {% with avg_similarity=avg_similarity|add:result.similarity %}{% endwith %}
-                                        {% endfor %}
-                                        {{ avg_similarity|floatformat:2 }}%
-                                    {% endwith %}
+                                    {% if results|length > 0 %}
+                                        {% with total_similarity=0 %}
+                                            {% for result in results %}
+                                                {% with total_similarity=total_similarity|add:result.similarity %}
+                                                    {% if forloop.last %}
+                                                        {% with avg_similarity=total_similarity|floatformat:4|stringformat:'s'|slice:'2:' %}
+                                                            {{ avg_similarity }}%
+                                                        {% endwith %}
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    {% else %}
+                                        0.00%
+                                    {% endif %}
                                 </p>
                                 <p class="mb-0">
                                     <strong>Matching Phrases:</strong>
-                                    {% with total_matches=0 %}
-                                        {% for result in results %}
-                                            {% with total_matches=total_matches|add:result.matches|length %}{% endwith %}
-                                        {% endfor %}
-                                        {{ total_matches }}
-                                    {% endwith %}
+                                    {% if results|length > 0 %}
+                                        {% with total_matches=0 %}
+                                            {% for result in results %}
+                                                {% with new_total=total_matches|add:result.matches|length %}
+                                                    {% if forloop.last %}
+                                                        {{ new_total }}
+                                                    {% else %}
+                                                        {% with total_matches=new_total %}{% endwith %}
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    {% else %}
+                                        0
+                                    {% endif %}
                                 </p>
                             {% else %}
                                 <p class="mb-0">

@@ -110,19 +110,34 @@ function initializeCharts() {
         const similarityDataElem = document.getElementById('similarity-data');
         if (!similarityDataElem) return;
         
-        const data = JSON.parse(similarityDataElem.value);
+        let data;
+        try {
+            data = JSON.parse(similarityDataElem.value);
+        } catch (e) {
+            console.warn("Failed to parse similarity data:", e);
+            return;
+        }
+        
         if (!data || data.length === 0) return;
         
         // Create data for chart
         const labels = data.map(item => {
+            // Check if item has required properties
+            if (!item || !item.source) {
+                return 'Unknown Source';
+            }
             // Truncate long titles
             let title = item.source.title || 'Unnamed Source';
             return title.length > 30 ? title.substring(0, 27) + '...' : title;
         });
         
-        const values = data.map(item => (item.similarity * 100).toFixed(2));
+        const values = data.map(item => {
+            const similarity = parseFloat(item.similarity) || 0;
+            return (similarity * 100).toFixed(2);
+        });
+        
         const backgroundColors = data.map(item => {
-            const similarity = item.similarity;
+            const similarity = parseFloat(item.similarity) || 0;
             if (similarity > 0.5) return '#dc3545'; // high
             if (similarity > 0.3) return '#fd7e14'; // medium
             return '#28a745'; // low
@@ -199,28 +214,48 @@ function highlightMatches() {
         // Safely parse the JSON data, handling potential flattened array structure
         let matchesValue = matchesDataElem.value;
         let matches = [];
+        let allMatches = [];
         
         try {
-            // Try to parse the direct value
-            matches = JSON.parse(matchesValue);
-            
-            // If matches is not an array but contains matches from multiple sources
-            if (!Array.isArray(matches)) {
-                // Try to extract matches from results structure
-                const resultsData = document.getElementById('similarity-data');
-                if (resultsData) {
-                    const results = JSON.parse(resultsData.value);
-                    matches = [];
+            // Try to parse the results data first
+            const resultsData = document.getElementById('similarity-data');
+            if (resultsData) {
+                const results = JSON.parse(resultsData.value);
+                
+                if (Array.isArray(results)) {
+                    // Extract all matches from each result
                     results.forEach(result => {
-                        if (result.matches && Array.isArray(result.matches)) {
-                            matches = matches.concat(result.matches);
+                        if (result && result.matches && Array.isArray(result.matches)) {
+                            allMatches = allMatches.concat(result.matches);
                         }
                     });
+                    
+                    // If we found matches, use those
+                    if (allMatches.length > 0) {
+                        matches = allMatches;
+                    } else {
+                        // Otherwise try to parse the direct matches data
+                        try {
+                            const directMatches = JSON.parse(matchesValue);
+                            if (Array.isArray(directMatches)) {
+                                matches = directMatches;
+                            }
+                        } catch (innerError) {
+                            console.warn('Could not parse direct matches data:', innerError);
+                        }
+                    }
                 }
             }
         } catch (parseError) {
-            console.warn('Could not parse matches data, using empty array:', parseError);
-            matches = [];
+            console.warn('Could not parse results data, trying direct matches:', parseError);
+            try {
+                const directMatches = JSON.parse(matchesValue);
+                if (Array.isArray(directMatches)) {
+                    matches = directMatches;
+                }
+            } catch (directError) {
+                console.warn('Could not parse matches data at all, using empty array:', directError);
+            }
         }
         
         // If we still don't have an array, return early
