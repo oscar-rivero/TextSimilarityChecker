@@ -147,18 +147,14 @@
                     <h2 class="h4 mb-3">Matching Sources</h2>
                     {% for result in results %}
                         <div class="card results-card mb-3 {% if result.relevance_score > 1000 %}border-success border-2{% elif result.relevance_score > 500 %}border-primary{% elif result.relevance_score > 250 %}border-info{% endif %}">
-                            <!-- Always show category banner - use source URL to determine if Wikipedia -->
+                            <!-- Category Banner - Always display a category -->
                             <div class="card-category-banner">
-                                {% if result.source.url and 'wikipedia.org' in result.source.url %}
-                                    <span class="badge category-tag wikipedia-tag text-white">Wikipedia</span>
+                                {% if result.category_tag %}
+                                    <span class="badge category-tag {{ result.category_tag|lower }}-tag text-white">
+                                        {{ result.category_tag }}
+                                    </span>
                                 {% else %}
-                                    {% if result.category_tag %}
-                                        <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
-                                            {{ result.category_tag }}
-                                        </span>
-                                    {% else %}
-                                        <span class="badge category-tag general-tag text-white">General</span>
-                                    {% endif %}
+                                    <span class="badge category-tag general-tag text-white">General</span>
                                 {% endif %}
                             </div>
                             

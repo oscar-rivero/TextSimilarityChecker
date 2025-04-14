@@ -597,17 +597,26 @@ def check_plagiarism(text):
                 if len(original_match.split()) >= 5:
                     relevance_score += len(original_match.split()) * 15
             
-            # Assign a category tag based on URL and title - no special cases
-            if "wikipedia" in source_url.lower():
-                result["category_tag"] = "Wikipedia"
-                # Standard boost for Wikipedia
-                relevance_score += 150
+            # Classify content and assign most relevant tag for ALL sources
+            source_content = result.get("source_content", "")
+            if not source_content and "snippet" in result["source"]:
+                source_content = result["source"]["snippet"]
+            
+            # Add title to content for better classification (titles often have category indicators)
+            if "title" in result["source"]:
+                source_content = result["source"]["title"] + ". " + source_content
+            
+            # Check if the content has history-related terms in it or in the URL - common misclassification fix
+            if "history" in source_url.lower() or any(term in source_content.lower() for term in 
+                   ["history", "dynasty", "empire", "king", "queen", "ancient", "medieval", 
+                    "century", "historical", "chronicle", "reign", "emperor", "conquest"]):
+                result["category_tag"] = "History"
+            # Check for literature-related content
+            elif any(term in source_content.lower() for term in 
+                    ["literature", "writing", "author", "poem", "prose", "text", "book", 
+                     "manuscript", "chronicle", "works", "genre", "literary"]):
+                result["category_tag"] = "Literature"
             else:
-                # Classify content and assign most relevant tag
-                source_content = result.get("source_content", "")
-                if not source_content and "snippet" in result["source"]:
-                    source_content = result["source"]["snippet"]
-                
                 # Get primary category from classifier if we have content
                 if source_content and len(source_content) > 50:
                     try:
@@ -619,6 +628,10 @@ def check_plagiarism(text):
                         result["category_tag"] = "General"
                 else:
                     result["category_tag"] = "General"
+                    
+            # Boost Wikipedia relevance as a trusted source, but don't use it as a category
+            if "wikipedia" in source_url.lower():
+                relevance_score += 150
             
             # Add match count to relevance score (more matches = more relevant)
             relevance_score += len(result.get("matches", [])) * 5
