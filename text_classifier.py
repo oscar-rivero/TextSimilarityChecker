@@ -372,20 +372,34 @@ def _calculate_category_scores(word_freq, tokens, original_text):
             r'color family'
         ]
         
-        for pattern in color_patterns:
-            if re.search(pattern, original_text, re.IGNORECASE):
-                # If we find a strong color pattern, give it a big boost
-                category_scores["colors"] = category_scores.get("colors", 0) + 5
+        # Safely check for color patterns with proper error handling
+        if original_text is not None and isinstance(original_text, str):
+            for pattern in color_patterns:
+                try:
+                    if re.search(pattern, original_text, re.IGNORECASE):
+                        # If we find a strong color pattern, give it a big boost
+                        category_scores["colors"] = category_scores.get("colors", 0) + 5
+                except (TypeError, re.error) as e:
+                    # Log error but continue processing
+                    print(f"Error in regex search for pattern '{pattern}': {e}")
+                    continue
                 
         # Special case: if we detect insect anatomy terminology BUT also color terminology,
         # strongly favor biology over colors for the green beetle example
-        if "beetle" in original_text.lower() and any(term in original_text.lower() for term in ["abdomen", "thorax", "oviduct", "testes", "reproductive"]):
-            if re.search(r'green|yellow|color', original_text, re.IGNORECASE):
-                # This is likely about beetle biology that mentions color, not about color itself
-                category_scores["biology"] = category_scores.get("biology", 0) + 8
-                # Decrease any color category score
-                if "colors" in category_scores:
-                    category_scores["colors"] = max(0, category_scores["colors"] - 5)
+        if original_text is not None and isinstance(original_text, str):
+            try:
+                if "beetle" in original_text.lower() and any(term in original_text.lower() for term in ["abdomen", "thorax", "oviduct", "testes", "reproductive"]):
+                    try:
+                        if re.search(r'green|yellow|color', original_text, re.IGNORECASE):
+                            # This is likely about beetle biology that mentions color, not about color itself
+                            category_scores["biology"] = category_scores.get("biology", 0) + 8
+                            # Decrease any color category score
+                            if "colors" in category_scores:
+                                category_scores["colors"] = max(0, category_scores["colors"] - 5)
+                    except (TypeError, re.error) as e:
+                        print(f"Error in regex search for color terms: {e}")
+            except Exception as e:
+                print(f"Error in beetle biology detection: {e}")
         
         # Calculate keyword-based scores for all categories
         for category, keywords in CATEGORY_KEYWORDS.items():
@@ -411,10 +425,14 @@ def _calculate_category_scores(word_freq, tokens, original_text):
             category_scores[category] = normalized_score
         
         # Special case for scientific descriptions - check for Latin names
-        latin_name_pattern = r'\b[A-Z][a-z]+ [a-z]+\b'
-        if re.search(latin_name_pattern, original_text):
-            # Latin names strongly suggest biology texts
-            category_scores["biology"] = max(category_scores.get("biology", 0) * 1.5, 5)
+        if original_text is not None and isinstance(original_text, str):
+            try:
+                latin_name_pattern = r'\b[A-Z][a-z]+ [a-z]+\b'
+                if re.search(latin_name_pattern, original_text):
+                    # Latin names strongly suggest biology texts
+                    category_scores["biology"] = max(category_scores.get("biology", 0) * 1.5, 5)
+            except (TypeError, re.error) as e:
+                print(f"Error in Latin name pattern search: {e}")
         
         # Get the top categories
         top_categories = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
