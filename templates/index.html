@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}Plagiarism Detector - Check Your Text{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary bg-gradient text-white">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-search me-2"></i>Plagiarism Detector
+                </h1>
+            </div>
+            <div class="card-body">
+                <p class="lead">Check your text for plagiarism by comparing it with online sources.</p>
+                
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                
+                <form action="/check" method="post">
+                    <div class="mb-3">
+                        <label for="text-input" class="form-label">Enter your text</label>
+                        <textarea class="form-control" id="text-input" name="text" rows="10" 
+                                 placeholder="Paste or type your text here to check for plagiarism..."
+                                 required></textarea>
+                        <div class="char-counter text-end mt-1">
+                            <span id="char-count">0</span> characters
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>Check for Plagiarism
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shield-alt text-success me-2"></i>
+                            <span>Your text is secure and confidential</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="d-flex align-items-center justify-content-md-end">
+                            <i class="fas fa-bolt text-warning me-2"></i>
+                            <span>Fast and accurate results</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-secondary bg-gradient text-white">
+                <h2 class="h4 mb-0">How It Works</h2>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="p-3">
+                            <i class="fas fa-paste fa-3x mb-3 text-primary"></i>
+                            <h3 class="h5">1. Input Your Text</h3>
+                            <p class="text-muted">Paste your essay, article, or any text content into the text box.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="p-3">
+                            <i class="fas fa-search fa-3x mb-3 text-primary"></i>
+                            <h3 class="h5">2. Check for Matches</h3>
+                            <p class="text-muted">Our system compares your text with millions of online sources.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="fas fa-chart-pie fa-3x mb-3 text-primary"></i>
+                            <h3 class="h5">3. View Detailed Results</h3>
+                            <p class="text-muted">Get a comprehensive report with similarity percentages and matched sources.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner (hidden by default) -->
+<div class="spinner-container" id="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Analyzing your text...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show loading spinner when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('loading-spinner').classList.add('show');
+    });
+</script>
+{% endblock %}
