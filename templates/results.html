@@ -147,6 +147,15 @@
                     <h2 class="h4 mb-3">Matching Sources</h2>
                     {% for result in results %}
                         <div class="card results-card mb-3 {% if result.relevance_score > 1000 %}border-success border-2{% elif result.relevance_score > 500 %}border-primary{% elif result.relevance_score > 250 %}border-info{% endif %}">
+                            {% if result.category_tag %}
+                                <!-- Category Tag - As a top banner -->
+                                <div class="card-category-banner">
+                                    <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
+                                        {{ result.category_tag }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                            
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -165,13 +174,6 @@
                                             <span class="badge bg-primary">Relevant</span>
                                         {% endif %}
                                     </div>
-                                    
-                                    <!-- Category Tag - Prominent Display -->
-                                    {% if result.category_tag %}
-                                        <span class="badge category-tag {% if result.category_tag == 'Wikipedia' %}wikipedia-tag{% else %}{{ result.category_tag|lower }}-tag{% endif %} text-white">
-                                            {{ result.category_tag }}
-                                        </span>
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="card-body">
