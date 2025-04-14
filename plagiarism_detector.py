@@ -12,6 +12,7 @@ from difflib import SequenceMatcher
 import json
 from web_scraper import get_website_text_content
 import semantic_comparison
+import text_classifier
 
 # Download NLTK resources
 try:
@@ -292,28 +293,44 @@ def find_matching_phrases(original_text, source_text, min_length=5):
 def check_plagiarism(text):
     """
     Check plagiarism by:
-    1. Breaking text into smaller chunks
-    2. Searching each chunk online
-    3. Comparing the text with search results
-    4. Identifying matching content
-    5. Performing semantic analysis to detect paraphrased content
+    1. Classifying the text to determine its category/topic
+    2. Generating targeted search queries based on the category
+    3. Searching for sources related to the identified topic
+    4. Comparing the text with search results
+    5. Identifying matching content
+    6. Performing semantic analysis to detect paraphrased content
     """
     logger.debug("Starting plagiarism check")
     
     # Preprocess the input text
     processed_text = preprocess_text(text)
     
+    # Classify the text to determine its category
+    classification_result = text_classifier.classify_text(text)
+    
+    logger.info(f"Text classified as: {classification_result['primary_category']} (score: {classification_result['primary_score']:.2f})")
+    
+    # Get targeted search terms based on classification
+    targeted_search_terms = classification_result['search_terms']
+    logger.info(f"Generated search terms: {targeted_search_terms}")
+    
+    # Add a fallback method with sentences for diversity
     # Extract sentences for search queries
     sentences = sent_tokenize(text)
     
-    # Take every third sentence to create search queries
-    search_queries = [sentences[i] for i in range(0, len(sentences), 3)]
+    # Take every third sentence to create search queries, but limit to only 2
+    sentence_queries = [sentences[i] for i in range(0, len(sentences), 6)][:2]
     
-    # Limit to max 5 queries to avoid API overuse
+    # Combine targeted search terms with some sentence queries
+    search_queries = targeted_search_terms.copy()
+    for query in sentence_queries:
+        if len(query.split()) > 5 and len(query.split()) < 20 and query not in search_queries:
+            search_queries.append(query)
+    
+    # Ensure we don't exceed 5 queries total
     search_queries = search_queries[:5]
     
-    # Add a specific Wikipedia query based on the text
-    # Extract potential entity names for Wikipedia search
+    # Add a specific Wikipedia query if we detected entities
     words = text.split()
     potential_entities = []
     
@@ -325,9 +342,16 @@ def check_plagiarism(text):
             if i+1 < len(words) and words[i+1] and words[i+1][0].isupper():
                 entity += " " + words[i+1]
             potential_entities.append(entity)
-            
-    # Add Wikipedia-specific search if we found potential entities
-    if potential_entities:
+    
+    # Add category-specific Wikipedia search for better results
+    if potential_entities and classification_result['primary_category'] != 'general':
+        category = classification_result['primary_category']
+        entity = potential_entities[0]
+        wiki_query = f"{entity} {category} wikipedia"
+        if wiki_query not in search_queries:
+            search_queries.append(wiki_query)
+    # Or just a general Wikipedia search if no category was identified
+    elif potential_entities:
         wiki_query = f"{potential_entities[0]} wikipedia"
         if wiki_query not in search_queries:
             search_queries.append(wiki_query)
@@ -473,6 +497,11 @@ def generate_report(original_text, results):
         }
         top_sources.append(source_info)
     
+    # Classify the text
+    classification = text_classifier.classify_text(original_text)
+    primary_category = classification["primary_category"]
+    top_categories = classification["top_categories"]
+    
     # Create report data
     report = {
         "original_length": len(original_text.split()),
@@ -480,7 +509,12 @@ def generate_report(original_text, results):
         "average_similarity": avg_similarity,
         "total_matches": total_matches,
         "top_sources": top_sources,
-        "timestamp": import_datetime().datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": import_datetime().datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "classification": {
+            "primary_category": primary_category,
+            "top_categories": top_categories,
+            "search_terms": classification["search_terms"]
+        }
     }
     
     return report

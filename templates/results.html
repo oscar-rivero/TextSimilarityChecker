@@ -25,6 +25,37 @@
                             </button>
                         </div>
                         
+                        <!-- Text Classification Card -->
+                        {% if report.classification %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-info bg-gradient text-white">
+                                <h3 class="h5 mb-0">
+                                    <i class="fas fa-tag me-2"></i>Text Classification
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">
+                                    <strong>Primary Category:</strong> 
+                                    <span class="badge bg-primary">{{ report.classification.primary_category|title }}</span>
+                                </p>
+                                <p class="mb-1"><strong>Top Categories:</strong></p>
+                                <div class="d-flex flex-wrap mb-2">
+                                    {% for category, score in report.classification.top_categories %}
+                                        <span class="badge bg-secondary me-1 mb-1">
+                                            {{ category|title }} ({{ score|floatformat:1 }})
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                                <p class="mb-1"><strong>Search Terms Used:</strong></p>
+                                <div class="d-flex flex-wrap">
+                                    {% for term in report.classification.search_terms %}
+                                        <span class="badge bg-light text-dark me-1 mb-1">{{ term }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="alert {% if results %}alert-warning{% else %}alert-success{% endif %}">
                             <p class="mb-1">
                                 <strong>Sources Found:</strong> {{ results|length }}
