@@ -417,11 +417,7 @@ def check_plagiarism(text):
     # Always add the direct text query as the highest priority search
     search_queries = [direct_match_query]
     
-    # If the text appears to be about Gratiana boliviana (green beetle matching our exact example):
-    if "green in color" in text.lower() and "yellow" in text.lower() and "adult" in text.lower():
-        # Add specific query for Gratiana boliviana
-        search_queries.append("Gratiana boliviana")
-        search_queries.append("Gratiana boliviana green yellow")
+    # We don't need to add any special cases for particular content
     
     # Also add a quoted version for exact match (if it's not too long)
     if len(direct_match_query) < 100 and len(direct_match_query) > 25:
@@ -557,22 +553,9 @@ def check_plagiarism(text):
                 # Classify source content to determine relevance
                 source_categories = text_classifier.classify_source_text(source_content)
                 
-                # Special handling for exact phrase matching in the example text about green beetles
-                if "green in color and turns yellow as it ages" in source_content or "green in color" in source_content and "yellow as it ages" in source_content:
-                    logger.info(f"Direct content match found in source: {source_url}")
-                    # This is a direct content match - always include this source
-                    is_relevant = True
-                    relevance_score = 2.0  # Assign a high relevance score for direct matches
-                # Special handling for Gratiana boliviana sources 
-                elif "gratiana boliviana" in source_content.lower() or "gratiana" in source_content.lower() and "boliviana" in source_content.lower():
-                    logger.info(f"Gratiana boliviana found in source: {source_url}")
-                    # Always include sources about the specific beetle species
-                    is_relevant = True
-                    relevance_score = 1.5  # High relevance score for exact species match
-                else:
-                    # Standard relevance check for other sources
-                    # New version returns both boolean and a numeric relevance score
-                    is_relevant, relevance_score = text_classifier.is_source_relevant(input_categories, source_categories, source_url=source_url)
+                # Standard relevance check for sources
+                # New version returns both boolean and a numeric relevance score
+                is_relevant, relevance_score = text_classifier.is_source_relevant(input_categories, source_categories, source_url=source_url)
                 
                 if not is_relevant:
                     logger.info(f"Discarding irrelevant source: {source_url}")
@@ -682,39 +665,16 @@ def check_plagiarism(text):
             # Determine relevance score based on classification
             relevance_score = 0
             
-            # Critical match cases - give huge relevance boost for these:
-            
-            # Direct case - exact string match for our key test case
-            if "green in color and turns yellow as it ages" in text.lower():
-                if "gratiana boliviana" in source_url.lower() or "gratiana boliviana" in source_title.lower():
-                    relevance_score += 1000  # Huge boost for exact matches to Gratiana boliviana
-                if "wikipedia" in source_url.lower() and "gratiana" in source_url.lower():
-                    relevance_score += 2000  # Even bigger boost for Wikipedia Gratiana article
-            
-            # Look for exact content matches in matches
+            # Look for matches and give higher relevance to longer matches
             for match in result.get("matches", []):
                 original_match = match.get("original", "").lower()
-                # Check for our key test case specifically
-                if "green in color" in original_match and "yellow" in original_match:
-                    relevance_score += 1500  # Huge boost for exact content matching
-                    
-                # Special case for the entire phrase
-                if "the young adult is green in color and turns yellow as it ages" in original_match:
-                    relevance_score += 3000  # Maximum relevance for exact match
                     
                 # More general boost for significant matches 
                 if len(original_match.split()) >= 5:  # Longer matches are more significant
                     relevance_score += len(original_match.split()) * 15  # Boost based on length
             
             # Assign a category tag based on URL and title
-            # Handle the Ethiopian historiography case specially
-            if "ethiopian_historiography" in source_url.lower() or "historiography" in source_url.lower():
-                result["category_tag"] = "Historiography"
-                relevance_score += 500  # Massive boost for historiography sources
-            elif "history" in source_url.lower() and "ethiopia" in source_url.lower():
-                result["category_tag"] = "Ethiopian History"
-                relevance_score += 400  # Very high boost for Ethiopian history
-            elif "wikipedia" in source_url.lower():
+            if "wikipedia" in source_url.lower():
                 result["category_tag"] = "Wikipedia"
                 # Boost Wikipedia more for specific topics
                 if "historiography" in source_url.lower() or "history" in source_url.lower():
