@@ -1,0 +1,75 @@
+/* Custom Styles for Plagiarism Detector */
+
+/* Highlight for matching phrases */
+.highlight, .match-highlight {
+    background-color: rgba(255, 215, 0, 0.3);
+    padding: 2px 0;
+    border-radius: 2px;
+}
+
+/* Spinner container for loading state */
+.spinner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    color: white;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.spinner-container.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Results card styling */
+.results-card {
+    border-left: 4px solid #6c757d;
+    transition: all 0.3s ease;
+}
+
+.results-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Footer styling */
+.footer {
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+}
+
+/* Similarity badge colors */
+.similarity-high {
+    background-color: #dc3545 !important;
+}
+
+.similarity-medium {
+    background-color: #fd7e14 !important;
+}
+
+.similarity-low {
+    background-color: #28a745 !important;
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    height: 220px;
+    width: 100%;
+}
+
+/* Character counter */
+.char-counter {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
