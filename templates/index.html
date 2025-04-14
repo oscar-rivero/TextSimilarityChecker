@@ -21,7 +21,8 @@
                 </div>
                 {% endif %}
                 
-                <form action="/check" method="post">
+                <form action="{% url 'check' %}" method="post">
+                    {% csrf_token %}
                     <div class="mb-3">
                         <label for="text-input" class="form-label">Enter your text</label>
                         <textarea class="form-control" id="text-input" name="text" rows="10" 

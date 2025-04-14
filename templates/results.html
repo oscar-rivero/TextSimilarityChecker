@@ -10,7 +10,7 @@
                 <h1 class="h3 mb-0">
                     <i class="fas fa-clipboard-check me-2"></i>Plagiarism Results
                 </h1>
-                <a href="/" class="btn btn-outline-light btn-sm">
+                <a href="{% url 'index' %}" class="btn btn-outline-light btn-sm">
                     <i class="fas fa-arrow-left me-1"></i>New Check
                 </a>
             </div>
@@ -24,18 +24,28 @@
                             </button>
                         </div>
                         
-                        <div class="alert {% if results|length > 0 %}alert-warning{% else %}alert-success{% endif %}">
+                        <div class="alert {% if results %}alert-warning{% else %}alert-success{% endif %}">
                             <p class="mb-1">
                                 <strong>Sources Found:</strong> {{ results|length }}
                             </p>
-                            {% if results|length > 0 %}
+                            {% if results %}
                                 <p class="mb-1">
                                     <strong>Average Similarity:</strong>
-                                    {{ "%.2f"|format((results|sum(attribute='similarity') / results|length) * 100) }}%
+                                    {% with avg_similarity=0 %}
+                                        {% for result in results %}
+                                            {% with avg_similarity=avg_similarity|add:result.similarity %}{% endwith %}
+                                        {% endfor %}
+                                        {{ avg_similarity|floatformat:2 }}%
+                                    {% endwith %}
                                 </p>
                                 <p class="mb-0">
                                     <strong>Matching Phrases:</strong>
-                                    {{ results|map(attribute='matches')|map('length')|sum }}
+                                    {% with total_matches=0 %}
+                                        {% for result in results %}
+                                            {% with total_matches=total_matches|add:result.matches|length %}{% endwith %}
+                                        {% endfor %}
+                                        {{ total_matches }}
+                                    {% endwith %}
                                 </p>
                             {% else %}
                                 <p class="mb-0">
@@ -48,7 +58,7 @@
                         <h2 class="h4 mb-3">Similarity Visualization</h2>
                         <div class="chart-container">
                             <canvas id="similarity-chart"></canvas>
-                            <input type="hidden" id="similarity-data" value="{{ results|tojson }}">
+                            <input type="hidden" id="similarity-data" value="{{ report_data|default:'[]' }}">
                         </div>
                     </div>
                 </div>
@@ -57,7 +67,7 @@
                 <div id="original-text-container" class="mb-4">
                     {{ original_text }}
                 </div>
-                <input type="hidden" id="matches-data" value="{{ results|map(attribute='matches')|list|tojson }}">
+                <input type="hidden" id="matches-data" value="{{ report_data|default:'[]' }}">
                 
                 {% if results|length > 0 %}
                     <h2 class="h4 mb-3">Matching Sources</h2>
@@ -72,7 +82,7 @@
                                         </a>
                                     </h3>
                                     <span class="badge {% if result.similarity > 0.5 %}similarity-high{% elif result.similarity > 0.3 %}similarity-medium{% else %}similarity-low{% endif %} similarity-badge">
-                                        {{ "%.2f"|format(result.similarity * 100) }}% Similar
+                                        {{ result.similarity|floatformat:2 }}% Similar
                                     </span>
                                 </div>
                                 
@@ -86,15 +96,17 @@
                                     <div class="mt-3">
                                         <p class="mb-2"><strong>Matching Phrases:</strong></p>
                                         <ul class="list-group">
-                                            {% for match in result.matches[:5] %}
+                                            {% for match in result.matches %}
+                                                {% if forloop.counter <= 5 %}
                                                 <li class="list-group-item">
                                                     <span class="match-highlight">{{ match.original }}</span>
                                                 </li>
+                                                {% endif %}
                                             {% endfor %}
                                             
                                             {% if result.matches|length > 5 %}
                                                 <li class="list-group-item text-muted">
-                                                    ... and {{ result.matches|length - 5 }} more matches
+                                                    ... and {{ result.matches|length|add:"-5" }} more matches
                                                 </li>
                                             {% endif %}
                                         </ul>
