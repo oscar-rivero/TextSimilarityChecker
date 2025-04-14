@@ -1,142 +1,150 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle the text area character count
-    const textArea = document.getElementById('text-input');
+    // Character counter for text input
+    const textInput = document.getElementById('text-input');
     const charCount = document.getElementById('char-count');
     
-    if (textArea && charCount) {
-        textArea.addEventListener('input', function() {
-            charCount.textContent = textArea.value.length;
+    if (textInput && charCount) {
+        textInput.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
         });
+        
+        // Initial count
+        charCount.textContent = textInput.value.length;
     }
     
-    // Initialize any tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    // Set up the copy to clipboard functionality
-    const copyBtns = document.querySelectorAll('.copy-btn');
-    if (copyBtns) {
-        copyBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const textToCopy = this.getAttribute('data-text');
-                if (textToCopy) {
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        // Change button text/icon temporarily
-                        const originalText = this.innerHTML;
-                        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                        setTimeout(() => {
-                            this.innerHTML = originalText;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                    });
-                }
-            });
-        });
-    }
-    
-    // Handle the export report button
+    // Export report functionality
     const exportReportBtn = document.getElementById('export-report');
     if (exportReportBtn) {
         exportReportBtn.addEventListener('click', function() {
-            // Fetch the report data
-            fetch('/report')
+            // Call the API endpoint to get report data
+            fetch(window.location.origin + '/report/')
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error('Error generating report: ' + response.statusText);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    // Create a downloadable text file
-                    const reportText = createReportText(data);
-                    const blob = new Blob([reportText], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Create a temporary link and click it to download
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'plagiarism_report.txt';
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Clean up
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    // Generate and download the report
+                    createReportText(data);
                 })
                 .catch(error => {
-                    console.error('Error exporting report:', error);
-                    alert('Error exporting report: ' + error.message);
+                    console.error('Error fetching report data:', error);
+                    alert('Error generating report: ' + error.message);
                 });
         });
     }
     
-    // Handle the visualization of results
-    const resultsContainer = document.getElementById('results-container');
-    if (resultsContainer) {
-        // Initialize charts if results are available
+    // Initialize charts if on results page
+    if (document.getElementById('similarity-chart')) {
         initializeCharts();
     }
+    
+    // Highlight matching text
+    highlightMatches();
 });
 
+// Function to generate and download a report
 function createReportText(data) {
-    let report = '===== PLAGIARISM CHECK REPORT =====\n\n';
-    report += `Date: ${data.timestamp}\n`;
-    report += `Words analyzed: ${data.original_length}\n`;
-    report += `Sources checked: ${data.sources_checked}\n`;
-    report += `Average similarity: ${(data.average_similarity * 100).toFixed(2)}%\n`;
-    report += `Total matching phrases: ${data.total_matches}\n\n`;
+    // Create text report
+    let reportText = "PLAGIARISM DETECTION REPORT\n";
+    reportText += "============================\n\n";
+    reportText += "Generated on: " + new Date().toLocaleString() + "\n\n";
     
-    report += '--- TOP MATCHING SOURCES ---\n\n';
-    data.top_sources.forEach((source, index) => {
-        report += `${index + 1}. ${source.title}\n`;
-        report += `   URL: ${source.url}\n`;
-        report += `   Similarity: ${(source.similarity * 100).toFixed(2)}%\n`;
-        report += `   Matching phrases: ${source.match_count}\n\n`;
-    });
+    // Original text section
+    reportText += "ORIGINAL TEXT:\n";
+    reportText += "-------------\n";
+    reportText += data.original_text + "\n\n";
     
-    return report;
+    // Summary section
+    reportText += "SUMMARY:\n";
+    reportText += "--------\n";
+    reportText += "Sources Found: " + data.sources_count + "\n";
+    reportText += "Average Similarity: " + data.average_similarity.toFixed(2) + "%\n";
+    reportText += "Total Matching Phrases: " + data.total_matches + "\n\n";
+    
+    // Sources section
+    reportText += "MATCHING SOURCES:\n";
+    reportText += "----------------\n";
+    
+    if (data.sources.length === 0) {
+        reportText += "No matching sources found.\n\n";
+    } else {
+        data.sources.forEach((source, index) => {
+            reportText += (index + 1) + ". " + source.title + "\n";
+            reportText += "   URL: " + source.url + "\n";
+            reportText += "   Similarity: " + (source.similarity * 100).toFixed(2) + "%\n";
+            reportText += "   Matching Phrases: " + source.matches.length + "\n\n";
+            
+            // List matching phrases
+            if (source.matches.length > 0) {
+                reportText += "   Matching Content:\n";
+                source.matches.forEach((match, mIndex) => {
+                    reportText += "   - " + match.original + "\n";
+                });
+                reportText += "\n";
+            }
+        });
+    }
+    
+    // Create a blob and download
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plagiarism_report_' + new Date().toISOString().slice(0, 10) + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
 }
 
+// Function to initialize charts on the results page
 function initializeCharts() {
-    // Get the similarity data from the page
-    const chartContainer = document.getElementById('similarity-chart');
-    
-    if (!chartContainer) return;
-    
-    // Get similarity data from hidden input
-    const similarityDataElem = document.getElementById('similarity-data');
-    if (!similarityDataElem) return;
-    
     try {
-        const similarityData = JSON.parse(similarityDataElem.value);
+        const similarityDataElem = document.getElementById('similarity-data');
+        if (!similarityDataElem) return;
         
-        // Create labels and data for the chart
-        const labels = similarityData.map(item => {
+        const data = JSON.parse(similarityDataElem.value);
+        if (!data || data.length === 0) return;
+        
+        // Create data for chart
+        const labels = data.map(item => {
             // Truncate long titles
-            let title = item.source.title;
+            let title = item.source.title || 'Unnamed Source';
             return title.length > 30 ? title.substring(0, 27) + '...' : title;
         });
         
-        const data = similarityData.map(item => (item.similarity * 100).toFixed(2));
+        const values = data.map(item => (item.similarity * 100).toFixed(2));
+        const backgroundColors = data.map(item => {
+            const similarity = item.similarity;
+            if (similarity > 0.5) return '#dc3545'; // high
+            if (similarity > 0.3) return '#fd7e14'; // medium
+            return '#28a745'; // low
+        });
         
         // Create the chart
-        const ctx = chartContainer.getContext('2d');
+        const ctx = document.getElementById('similarity-chart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Similarity (%)',
-                    data: data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    label: 'Similarity %',
+                    data: values,
+                    backgroundColor: backgroundColors,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -149,15 +157,25 @@ function initializeCharts() {
                     x: {
                         title: {
                             display: true,
-                            text: 'Source'
+                            text: 'Sources'
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 90,
+                            minRotation: 45
                         }
                     }
                 },
                 plugins: {
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return `Similarity: ${context.raw}%`;
+                            title: function(tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return data[index].source.title || 'Unnamed Source';
+                            },
+                            afterTitle: function(tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                return data[index].source.url || '';
                             }
                         }
                     }

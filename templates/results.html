@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load custom_filters %}
 
 {% block title %}Plagiarism Detection Results{% endblock %}
 
@@ -58,7 +59,7 @@
                         <h2 class="h4 mb-3">Similarity Visualization</h2>
                         <div class="chart-container">
                             <canvas id="similarity-chart"></canvas>
-                            <input type="hidden" id="similarity-data" value="{{ report_data|default:'[]' }}">
+                            <input type="hidden" id="similarity-data" value="{{ results|tojson }}">
                         </div>
                     </div>
                 </div>
@@ -67,7 +68,7 @@
                 <div id="original-text-container" class="mb-4">
                     {{ original_text }}
                 </div>
-                <input type="hidden" id="matches-data" value="{{ report_data|default:'[]' }}">
+                <input type="hidden" id="matches-data" value="{{ results|tojson }}">
                 
                 {% if results|length > 0 %}
                     <h2 class="h4 mb-3">Matching Sources</h2>
