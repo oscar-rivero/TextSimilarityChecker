@@ -560,52 +560,9 @@ def check_plagiarism(text):
             except Exception as e:
                 logger.error(f"Error processing source {result.get('link', 'unknown')}: {str(e)}")
     
-    # Perform semantic comparison if we have sources to compare
-    if source_texts:
-        try:
-            logger.info(f"Performing semantic comparison with {len(source_texts)} sources")
-            semantic_results = semantic_comparison.check_semantic_plagiarism(text, source_texts)
-            
-            # Merge lexical and semantic results
-            merged_results = []
-            
-            # Track seen URLs to avoid duplicates
-            semantic_urls = {r["source"]["url"]: r for r in semantic_results}
-            lexical_urls = {r["source"]["url"]: r for r in results}
-            
-            # Process all unique URLs
-            all_urls = set(list(semantic_urls.keys()) + list(lexical_urls.keys()))
-            
-            for url in all_urls:
-                if url in lexical_urls and url in semantic_urls:
-                    # Merge the two results
-                    lex_result = lexical_urls[url]
-                    sem_result = semantic_urls[url]
-                    
-                    # Use the higher similarity score
-                    if sem_result["similarity"] > lex_result["similarity"]:
-                        lex_result["similarity"] = sem_result["similarity"]
-                    
-                    # Add semantic matches
-                    lex_result["semantic_matches"] = sem_result.get("semantic_matches", [])
-                    
-                    # Combine matches, avoiding duplicates by using text as key
-                    existing_matches = {m["original"]: m for m in lex_result["matches"]}
-                    for match in sem_result.get("matches", []):
-                        if match["original"] not in existing_matches:
-                            lex_result["matches"].append(match)
-                    
-                    merged_results.append(lex_result)
-                elif url in lexical_urls:
-                    merged_results.append(lexical_urls[url])
-                else:
-                    merged_results.append(semantic_urls[url])
-            
-            # Replace results with merged results
-            results = merged_results
-            
-        except Exception as e:
-            logger.error(f"Error in semantic comparison: {str(e)}")
+    # Skip semantic comparison as requested by the user
+    # Only use the lexical results (exact text matches)
+    logger.info("Skipping semantic comparison as requested")
     
     # Apply text classification to each result to get categories and relevance scores
     for result in results:

@@ -197,13 +197,11 @@
                                     <i class="fas fa-link me-1"></i>{{ result.source.url }}
                                 </p>
                                 
-                                <p>{{ result.source.snippet }}</p>
-                                
-                                <!-- Best Matching Paragraph Section - Now Featured Prominently -->
+                                <!-- Best Matching Paragraph Section - HIGHLIGHTED PROMINENTLY -->
                                 {% if result.best_paragraph.content %}
-                                    <div class="mt-3 mb-4">
+                                    <div class="mt-3 mb-4 best-paragraph-section">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h4 class="h5 mb-0">Best Matching Paragraph</h4>
+                                            <h4 class="h5 mb-0 fw-bold">Best Matching Paragraph</h4>
                                             <span class="badge {% if result.best_paragraph.similarity > 70 %}bg-danger{% elif result.best_paragraph.similarity > 50 %}bg-warning text-dark{% elif result.best_paragraph.similarity > 30 %}bg-info text-white{% else %}bg-secondary{% endif %}">
                                                 {{ result.best_paragraph.similarity|floatformat:2 }}% Cosine Similarity
                                             </span>
@@ -213,6 +211,8 @@
                                         </div>
                                     </div>
                                 {% endif %}
+                                
+                                <p>{{ result.source.snippet }}</p>
                                 
                                 {% if result.matches|length > 0 %}
                                     <div class="mt-3">

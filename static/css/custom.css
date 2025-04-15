@@ -216,26 +216,41 @@
 }
 
 /* Best Matching Paragraph - Redesigned to be more prominent */
+.best-paragraph-section {
+    position: relative;
+    border-radius: 6px;
+    margin: 15px 0;
+    padding: 5px;
+}
+
 .best-paragraph-container {
     background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #dee2e6;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-top: 10px;
     border-radius: 4px;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
+    padding: 15px !important;
+}
+
+.best-paragraph-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .best-paragraph-container p {
     margin-bottom: 0;
     color: #212529;
     line-height: 1.6;
+    font-size: 1.05rem;
 }
 
-/* High similarity paragraph */
+/* High similarity paragraph - dangerous */
 .best-paragraph-high {
     border-color: #dc3545;
-    background-color: rgba(220, 53, 69, 0.05);
+    background-color: rgba(220, 53, 69, 0.08);
 }
 
 .best-paragraph-high::before {
@@ -243,15 +258,15 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 5px;
+    width: 6px;
     height: 100%;
     background-color: #dc3545;
 }
 
-/* Medium similarity paragraph */
+/* Medium similarity paragraph - warning */
 .best-paragraph-medium {
     border-color: #fd7e14;
-    background-color: rgba(253, 126, 20, 0.05);
+    background-color: rgba(253, 126, 20, 0.08);
 }
 
 .best-paragraph-medium::before {
@@ -259,15 +274,15 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 5px;
+    width: 6px;
     height: 100%;
     background-color: #fd7e14;
 }
 
-/* Low similarity paragraph */
+/* Low similarity paragraph - info */
 .best-paragraph-low {
     border-color: #17a2b8;
-    background-color: rgba(23, 162, 184, 0.05);
+    background-color: rgba(23, 162, 184, 0.08);
 }
 
 .best-paragraph-low::before {
@@ -275,7 +290,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 5px;
+    width: 6px;
     height: 100%;
     background-color: #17a2b8;
 }
