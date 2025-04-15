@@ -26,11 +26,11 @@ except LookupError:
 
 logger = logging.getLogger(__name__)
 
-def search_online(query, num_results=5):
+def search_online(query, num_results=10):
     """
     Search for the query text online using free and open search APIs.
     Uses DuckDuckGo and Wikipedia search APIs to find relevant sources.
-    No API key required.
+    No API key required. Default num_results increased to 10.
     """
     try:
         results = []
@@ -68,15 +68,39 @@ def search_online(query, num_results=5):
                     if len(results) >= num_results:
                         break
                     
-                    if 'FirstURL' in topic and 'Text' in topic:
-                        # Extract title from the URL
+                    # Handle nested topics (Categories)
+                    if 'Topics' in topic:
+                        for subtopic in topic.get('Topics', []):
+                            if len(results) >= num_results:
+                                break
+                                
+                            if 'FirstURL' in subtopic and 'Text' in subtopic:
+                                # Extract title from the URL or the text
+                                url_path = subtopic['FirstURL'].split('/')[-1].replace('_', ' ')
+                                # Use the first part of Text as title if available
+                                text_parts = subtopic['Text'].split(' - ', 1)
+                                title = text_parts[0] if len(text_parts) > 1 else subtopic.get('Name', url_path)
+                                snippet = text_parts[1] if len(text_parts) > 1 else subtopic['Text']
+                                
+                                results.append({
+                                    'title': title,
+                                    'link': subtopic['FirstURL'],
+                                    'snippet': snippet
+                                })
+                    
+                    # Handle direct topics
+                    elif 'FirstURL' in topic and 'Text' in topic:
+                        # Extract title from the URL or the text
                         url_path = topic['FirstURL'].split('/')[-1].replace('_', ' ')
-                        title = topic.get('Name', url_path)
+                        # Use the first part of Text as title if available
+                        text_parts = topic['Text'].split(' - ', 1)
+                        title = text_parts[0] if len(text_parts) > 1 else topic.get('Name', url_path)
+                        snippet = text_parts[1] if len(text_parts) > 1 else topic['Text']
                         
                         results.append({
                             'title': title,
                             'link': topic['FirstURL'],
-                            'snippet': topic['Text']
+                            'snippet': snippet
                         })
             
             logger.info(f"Found {len(results)} results from DuckDuckGo")
@@ -475,7 +499,7 @@ def check_plagiarism(text):
     for query in search_queries:
         try:
             # Search online with increased number of results
-            search_results = search_online(query, num_results=20)
+            search_results = search_online(query, num_results=30)
             
             # Skip to next query if we're hitting rate limits
             if search_results and len(search_results) == 1 and "Rate Limit" in search_results[0].get("title", ""):

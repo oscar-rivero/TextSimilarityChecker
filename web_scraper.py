@@ -9,8 +9,8 @@ import random
 
 logger = logging.getLogger(__name__)
 
-# Set to True to use mock content instead of real web requests
-USE_SAFE_MODE = True
+# Set to False to fetch real content instead of mock content
+USE_SAFE_MODE = False
 
 def is_valid_url(url):
     """Check if URL is valid and has a supported scheme"""
