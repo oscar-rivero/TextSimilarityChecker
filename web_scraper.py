@@ -181,21 +181,86 @@ def get_website_text_content(url: str) -> str:
         logger.info(f"Using robust alternative method for {url}")
         
         # Método alternativo con requests y procesamiento básico
-        # Set custom headers to simulate a real browser
+        # Set custom headers to simulate a modern browser with better compatibility
+        # Especialmente diseñado para sitios académicos y editoriales
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://www.google.com/',
+            'sec-ch-ua': '"Google Chrome";v="121", "Not A(Brand";v="24", "Chromium";v="121"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'cross-site',
+            'sec-fetch-user': '?1',
             'DNT': '1',  # Do Not Track
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
         }
         
         # Petición con manejo de errores y tiempo de espera reducido
+        # Implementamos manejo especial para sitios académicos y editoriales
         try:
+            # Primero intentamos con la configuración normal
             response = requests.get(url, headers=headers, timeout=10, 
                                    allow_redirects=True, stream=True)
+            
+            # Verificamos si nos redirigió a una página de "unsupported browser"
+            if 'unsupported' in response.url.lower() or response.status_code == 400:
+                logger.warning(f"Detected unsupported browser page: {response.url}. Trying alternative approach")
+                
+                # Modificamos los headers para simular mejor un navegador real
+                alt_headers = headers.copy()
+                alt_headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0'
+                alt_headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                
+                # Intentamos de nuevo con la URL original
+                logger.info(f"Retrying with alternative headers: {url}")
+                original_url = url
+                session = requests.Session()
+                
+                # Configuración manual para seguir redirecciones
+                response = session.get(url, headers=alt_headers, timeout=15, stream=True, allow_redirects=False)
+                
+                # Seguimos manualmente hasta 10 redirecciones
+                redirect_count = 0
+                while response.is_redirect and redirect_count < 10:
+                    redirect_url = response.headers['Location']
+                    # Convertir URLs relativas a absolutas
+                    if redirect_url.startswith('/'):
+                        parsed_url = urlparse(url)
+                        redirect_url = f"{parsed_url.scheme}://{parsed_url.netloc}{redirect_url}"
+                    logger.info(f"Following redirect: {redirect_url}")
+                    response = session.get(redirect_url, headers=alt_headers, timeout=15, stream=True, allow_redirects=False)
+                    redirect_count += 1
+                
+                if redirect_count >= 10:
+                    logger.error(f"Too many redirects for {url}")
+                    return ""
+            
+            # Verificamos si la respuesta fue exitosa después de todo el manejo
             response.raise_for_status()
+            
+        except requests.exceptions.HTTPError as http_err:
+            logger.error(f"HTTP error for {url}: {str(http_err)}")
+            # Obtener el código de estado de la excepción en lugar de la variable response
+            status_code = getattr(http_err.response, 'status_code', 0)
+            if status_code in [403, 429]:
+                logger.warning(f"Access denied (status code {status_code}). Site may be blocking scrapers.")
+            return ""
+        except requests.exceptions.ConnectionError as conn_err:
+            logger.error(f"Connection error for {url}: {str(conn_err)}")
+            return ""
+        except requests.exceptions.Timeout as timeout_err:
+            logger.error(f"Timeout error for {url}: {str(timeout_err)}")
+            return ""
+        except requests.exceptions.RequestException as req_err:
+            logger.error(f"Request error for {url}: {str(req_err)}")
+            return ""
         except Exception as e:
             logger.error(f"Failed to fetch URL {url}: {str(e)}")
             return ""
@@ -267,9 +332,63 @@ def get_website_text_content(url: str) -> str:
                     text = html_content.replace('<', ' ').replace('>', ' ')
                     text = re.sub(r'\s+', ' ', text).strip()
             
+            # Detectar si es un sitio que probablemente requiere JavaScript
+            js_required_indicators = [
+                "Please enable JavaScript",
+                "JavaScript is required",
+                "enable JavaScript to continue",
+                "This page requires JavaScript",
+                "Your browser has JavaScript disabled",
+                "You need to enable JavaScript",
+                "content is not available without JavaScript"
+            ]
+            
+            js_required = False
+            for indicator in js_required_indicators:
+                if indicator.lower() in html_content.lower():
+                    js_required = True
+                    logger.warning(f"Detected JavaScript requirement on {url}")
+                    break
+            
             # Verify we have meaningful content
-            if not text or len(text.strip()) < 100:
-                logger.warning(f"Failed to extract meaningful text from {url}")
+            if not text or len(text.strip()) < 100 or js_required:
+                logger.warning(f"Failed to extract meaningful text from {url} - JS required: {js_required}")
+                
+                # Para sitios que requieren JavaScript o donde no se pudo extraer contenido,
+                # podemos hacer una búsqueda de metadatos como fallback
+                try:
+                    # Extraer metadatos de las etiquetas meta
+                    meta_description = re.search(r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html_content, re.IGNORECASE)
+                    meta_keywords = re.search(r'<meta\s+name=["\']keywords["\']\s+content=["\'](.*?)["\']', html_content, re.IGNORECASE)
+                    og_description = re.search(r'<meta\s+property=["\']og:description["\']\s+content=["\'](.*?)["\']', html_content, re.IGNORECASE)
+                    og_title = re.search(r'<meta\s+property=["\']og:title["\']\s+content=["\'](.*?)["\']', html_content, re.IGNORECASE)
+                    
+                    # Extraer título
+                    title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
+                    
+                    # Combinar metadatos disponibles para crear un resumen
+                    meta_parts = []
+                    if title_match:
+                        meta_parts.append(f"Title: {title_match.group(1)}")
+                    if meta_description:
+                        meta_parts.append(f"Description: {meta_description.group(1)}")
+                    if og_description:
+                        meta_parts.append(f"Social description: {og_description.group(1)}")
+                    if og_title and not title_match:
+                        meta_parts.append(f"Social title: {og_title.group(1)}")
+                    if meta_keywords:
+                        meta_parts.append(f"Keywords: {meta_keywords.group(1)}")
+                    
+                    # Si tenemos algún metadato, usarlo como texto
+                    if meta_parts:
+                        meta_text = "\n\n".join(meta_parts)
+                        logger.info(f"Using metadata as fallback content for {url}, length: {len(meta_text)}")
+                        if len(meta_text) > 100:
+                            return meta_text
+                except Exception as meta_error:
+                    logger.error(f"Failed to extract metadata from {url}: {str(meta_error)}")
+                
+                # Si llegamos aquí, no pudimos extraer nada útil
                 return ""
             
             # Limit final text length
