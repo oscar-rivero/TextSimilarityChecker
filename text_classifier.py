@@ -528,12 +528,12 @@ def _calculate_category_scores(word_freq, tokens, original_text):
                 if ' ' in keyword:  # Multi-word keyword
                     if keyword in original_text.lower():
                         score += 3  # Multi-word matches are stronger indicators
-                elif keyword in tokens:
+                elif isinstance(keyword, str) and keyword in [str(t) for t in tokens if isinstance(t, str)]:
                     # Get frequency of the keyword
                     freq = word_freq.get(keyword, 0)
                     # Add to score (more frequent keywords count more)
                     score += freq * 2
-                elif any(keyword in token for token in tokens):
+                elif any(keyword in str(token) for token in tokens if isinstance(token, str)):
                     # Partial matches count less
                     score += 0.5
             

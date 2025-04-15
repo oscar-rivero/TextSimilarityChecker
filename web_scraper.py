@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Enabling mock mode to ensure the application works properly
 # This ensures the application continues to function despite network issues
-USE_SAFE_MODE = True
+USE_SAFE_MODE = False
 
 def is_valid_url(url):
     """Check if URL is valid and has a supported scheme"""
