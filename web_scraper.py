@@ -1,11 +1,11 @@
 import logging
 import requests
+import re
 from urllib.parse import urlparse
 import time
 import os
 import hashlib
 import random
-from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ def get_mock_content(url):
 def get_website_text_content(url: str) -> str:
     """
     This function takes a url and returns the main text content of the website.
-    The text content is extracted using BeautifulSoup for reliable text extraction.
+    The text content is extracted using a simple regex-based approach for robust HTML parsing.
     In safe mode, it returns mock content to prevent errors.
     """
     # Check if URL is valid first
@@ -202,25 +202,39 @@ def get_website_text_content(url: str) -> str:
             logger.warning(f"Timeout fetching content from {url}")
             return ""
             
-        # Skip trafilatura and use BeautifulSoup directly to avoid errors
-        logger.info(f"Using BeautifulSoup for HTML extraction from {url}")
+        # Skip complex parsing and use a simpler, safer approach
+        logger.info(f"Using simplified text extraction from {url}")
         
         text = None
         try:
-            soup = BeautifulSoup(response.text, 'html.parser')
+            # Limit HTML size to prevent memory issues (1MB max)
+            html_content = response.text[:1024*1024] if len(response.text) > 1024*1024 else response.text
             
-            # Remove script and style elements
-            for script_or_style in soup(["script", "style"]):
-                script_or_style.decompose()
+            # Very basic HTML to text conversion without BeautifulSoup
+            # This is less accurate but much safer for handling malformed HTML
+            try:
+                # Remove script and style tags with basic regex
+                html_content = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', ' ', html_content, flags=re.DOTALL)
+                html_content = re.sub(r'<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>', ' ', html_content, flags=re.DOTALL)
                 
-            # Get the text content
-            text = soup.get_text(separator='\n\n')
-            
-            # Clean the text (remove extra whitespace, etc.)
-            lines = [line.strip() for line in text.splitlines() if line.strip()]
-            text = '\n\n'.join(lines)
+                # Remove all HTML tags
+                text = re.sub(r'<[^>]+>', ' ', html_content)
+                
+                # Replace multiple whitespace with single space
+                text = re.sub(r'\s+', ' ', text).strip()
+                
+                # Split into paragraphs on double newlines
+                paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+                
+                # Join paragraphs with double newlines
+                text = '\n\n'.join(paragraphs)
+            except Exception as regex_error:
+                logger.error(f"Regex processing failed: {str(regex_error)}")
+                # Fallback to even simpler method
+                text = html_content.replace('<', ' ').replace('>', ' ')
+                text = re.sub(r'\s+', ' ', text).strip()
         except Exception as e:
-            logger.error(f"BeautifulSoup extraction failed: {str(e)}")
+            logger.error(f"Text extraction failed: {str(e)}")
             return ""
         
         if not text or len(text.strip()) < 50:
