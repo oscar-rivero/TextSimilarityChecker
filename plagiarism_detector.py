@@ -512,10 +512,14 @@ def check_plagiarism(text):
         for result in search_results:
             try:
                 # Get content from the webpage
-                source_url = result["link"]
-                if source_url == "#":  # Skip placeholder URLs
+                source_url = result.get("url") or result.get("link", "")
+                if not source_url or source_url == "#":  # Skip empty or placeholder URLs
                     continue
                 
+                # Ensure URL is properly formatted
+                if source_url and not source_url.startswith(('http://', 'https://')):
+                    source_url = 'https://' + source_url
+                    
                 source_content = get_website_text_content(source_url)
                 
                 if not source_content:
@@ -601,6 +605,11 @@ def check_plagiarism(text):
         try:
             # Get the source URL and title for classification
             source_url = result["source"]["url"]
+            # Ensure URL is properly formatted
+            if source_url and not source_url.startswith(('http://', 'https://')):
+                source_url = 'https://' + source_url
+                result["source"]["url"] = source_url  # Update URL in result
+                
             source_title = result["source"]["title"]
             
             # Determine relevance score based on classification
