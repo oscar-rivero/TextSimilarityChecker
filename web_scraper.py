@@ -6,6 +6,7 @@ import time
 import os
 import hashlib
 import random
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -156,8 +157,16 @@ def get_website_text_content(url: str) -> str:
     In safe mode, it returns mock content to prevent errors.
     """
     # Check if URL is valid first
+    if not url or not isinstance(url, str):
+        logger.warning(f"Invalid URL: {url} (not a string or empty)")
+        return ""
+        
+    # Fix common URL issues
+    if not url.startswith('http://') and not url.startswith('https://'):
+        url = 'https://' + url
+
     if not is_valid_url(url):
-        logger.warning(f"Invalid URL format: {url}")
+        logger.warning(f"Invalid URL format after fixing: {url}")
         return ""
     
     # Use mock content in safe mode to prevent errors
@@ -182,32 +191,45 @@ def get_website_text_content(url: str) -> str:
         }
         
         # Use requests for more control over the request
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        except Exception as e:
+            logger.error(f"Failed to fetch URL {url}: {str(e)}")
+            return ""
+            
         # If it takes too long, bail out
         if time.time() - start_time > 15:  # 15 seconds maximum
             logger.warning(f"Timeout fetching content from {url}")
             return ""
             
         # Use trafilatura to extract the text from the HTML
-        text = trafilatura.extract(response.text)
+        try:
+            text = trafilatura.extract(response.text)
+        except Exception as e:
+            logger.warning(f"Trafilatura extraction failed: {str(e)}")
+            text = None
         
         if not text or len(text.strip()) < 50:
             # Fallback to BeautifulSoup if trafilatura fails to extract content
             logger.info(f"Trafilatura failed to extract content, using BeautifulSoup as fallback for {url}")
-            soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Remove script and style elements
-            for script_or_style in soup(["script", "style"]):
-                script_or_style.decompose()
+            try:
+                soup = BeautifulSoup(response.text, 'html.parser')
                 
-            # Get the text content
-            text = soup.get_text(separator='\n\n')
-            
-            # Clean the text (remove extra whitespace, etc.)
-            lines = [line.strip() for line in text.splitlines() if line.strip()]
-            text = '\n\n'.join(lines)
+                # Remove script and style elements
+                for script_or_style in soup(["script", "style"]):
+                    script_or_style.decompose()
+                    
+                # Get the text content
+                text = soup.get_text(separator='\n\n')
+                
+                # Clean the text (remove extra whitespace, etc.)
+                lines = [line.strip() for line in text.splitlines() if line.strip()]
+                text = '\n\n'.join(lines)
+            except Exception as e:
+                logger.error(f"BeautifulSoup fallback failed: {str(e)}")
+                return ""
         
         if not text or len(text.strip()) < 50:
             logger.warning(f"Failed to extract meaningful text from {url}")
