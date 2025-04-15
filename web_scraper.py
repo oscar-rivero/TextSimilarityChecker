@@ -251,6 +251,8 @@ def get_website_text_content(url: str) -> str:
             status_code = getattr(http_err.response, 'status_code', 0)
             if status_code in [403, 429]:
                 logger.warning(f"Access denied (status code {status_code}). Site may be blocking scrapers.")
+            # Para errores HTTP, devolvemos una cadena vacía pero con un marcador para que
+            # plagiarism_detector.py pueda manejar estos casos apropiadamente
             return ""
         except requests.exceptions.ConnectionError as conn_err:
             logger.error(f"Connection error for {url}: {str(conn_err)}")

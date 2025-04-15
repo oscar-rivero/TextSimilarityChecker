@@ -523,10 +523,11 @@ def check_plagiarism(text):
                 source_content = get_website_text_content(source_url)
                 
                 if not source_content:
+                    logger.info(f"Omitiendo fuente {source_url} porque no se pudo acceder al contenido")
                     continue
                 
                 # Skip empty content
-                if not source_content or len(source_content.strip()) < 50:
+                if len(source_content.strip()) < 50:
                     logger.warning(f"Source content too short or empty from {source_url}")
                     continue
                 
