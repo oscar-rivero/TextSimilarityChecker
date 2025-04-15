@@ -17,9 +17,21 @@ logger = logging.getLogger(__name__)
 try:
     nltk.data.find('corpora/stopwords')
     nltk.data.find('tokenizers/punkt')
+    nltk.data.find('taggers/averaged_perceptron_tagger_eng')
 except LookupError:
     nltk.download('stopwords')
     nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger_eng')
+    
+# Set to use the English-specific tagger when available
+try:
+    from nltk.tag import PerceptronTagger
+    _TAGGER = PerceptronTagger(load="averaged_perceptron_tagger_eng")
+    POS_TAGGER = 'eng'
+    logger.info("Using English-specific POS tagger")
+except Exception as e:
+    logger.warning(f"Falling back to standard POS tagger: {str(e)}")
+    POS_TAGGER = 'standard'
 
 # Dictionary of categories with their associated keywords (enhanced with Wikipedia categories)
 CATEGORY_KEYWORDS = {
@@ -1429,7 +1441,17 @@ def extract_key_phrases(text):
     
     # Tokenize and tag parts of speech
     tokens = word_tokenize(clean_text)
-    tagged = nltk.pos_tag(tokens)
+    
+    # Use the English-specific POS tagger when available
+    if POS_TAGGER == 'eng':
+        try:
+            tagged = _TAGGER.tag(tokens)
+            logger.debug("Using English-specific POS tagger")
+        except Exception as e:
+            logger.warning(f"English tagger failed, falling back to standard: {str(e)}")
+            tagged = nltk.pos_tag(tokens)
+    else:
+        tagged = nltk.pos_tag(tokens)
     
     # Store all content words (VERB, NOUN, ADVERB, ADJECTIVE without stopwords)
     content_words = []

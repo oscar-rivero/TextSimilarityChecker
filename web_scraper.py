@@ -6,9 +6,6 @@ import time
 import os
 import hashlib
 import random
-from bs4 import BeautifulSoup
-import nltk
-from nltk.tokenize import sent_tokenize
 
 logger = logging.getLogger(__name__)
 
