@@ -9,9 +9,9 @@ import random
 
 logger = logging.getLogger(__name__)
 
-# Set to True to use mock content instead of real web requests
-# We need to use mock content in Replit environment due to network limitations
-USE_SAFE_MODE = True
+# Set to False to fetch real webpage content instead of using mock data
+# This will fetch and analyze actual HTML content from websites
+USE_SAFE_MODE = False
 
 def is_valid_url(url):
     """Check if URL is valid and has a supported scheme"""
