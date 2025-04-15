@@ -10,8 +10,8 @@ import random
 logger = logging.getLogger(__name__)
 
 # Desactivamos el modo seguro para usar datos reales como ha solicitado el usuario
-# Sin embargo, implementaremos mejor manejo de errores para evitar fallos
-USE_SAFE_MODE = True
+# Implementamos manejo robusto de errores para evitar problemas
+USE_SAFE_MODE = False
 
 def is_valid_url(url):
     """Check if URL is valid and has a supported scheme"""
@@ -152,7 +152,7 @@ def get_mock_content(url):
 def get_website_text_content(url: str) -> str:
     """
     This function takes a url and returns the main text content of the website.
-    The text content is extracted using a simple regex-based approach for robust HTML parsing.
+    The text content is extracted using the trafilatura library for optimal content extraction.
     In safe mode, it returns mock content to prevent errors.
     """
     # Check if URL is valid first
@@ -175,74 +175,135 @@ def get_website_text_content(url: str) -> str:
     
     try:
         logger.info(f"Fetching real content from {url}")
-        # Track start time for timeout management
-        start_time = time.time()
         
+        # Intento primero con trafilatura para obtener contenido bien estructurado
+        try:
+            import trafilatura
+            logger.info(f"Using trafilatura to extract content from {url}")
+            
+            # Descarga el contenido con manejo de errores
+            downloaded = None
+            try:
+                downloaded = trafilatura.fetch_url(url)
+            except Exception as fetch_error:
+                logger.error(f"Trafilatura fetch error for {url}: {str(fetch_error)}")
+                # Si falla la descarga, intentamos con requests
+                
+            # Si se descargó correctamente, extraemos el texto
+            if downloaded:
+                try:
+                    # Extracción con trafilatura
+                    extracted_text = trafilatura.extract(downloaded)
+                    if extracted_text and len(extracted_text.strip()) > 100:
+                        logger.info(f"Successfully extracted {len(extracted_text)} characters from {url} with trafilatura")
+                        return extracted_text
+                except Exception as extract_error:
+                    logger.error(f"Trafilatura extraction error: {str(extract_error)}")
+                    # Continuamos con el método alternativo
+        except ImportError:
+            logger.warning("Trafilatura no disponible, usando método alternativo")
+            # Continuamos con el método alternativo si no está disponible trafilatura
+        
+        # Método alternativo con requests y procesamiento básico
         # Set custom headers to simulate a real browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',  # Do Not Track
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
-            'Cache-Control': 'max-age=0'
         }
         
-        # Use requests for more control over the request
+        # Petición con manejo de errores y tiempo de espera reducido
         try:
-            response = requests.get(url, headers=headers, timeout=15)
-            response.raise_for_status()  # Raise an exception for HTTP errors
+            response = requests.get(url, headers=headers, timeout=10, 
+                                   allow_redirects=True, stream=True)
+            response.raise_for_status()
         except Exception as e:
             logger.error(f"Failed to fetch URL {url}: {str(e)}")
             return ""
-            
-        # If it takes too long, bail out
-        if time.time() - start_time > 15:  # 15 seconds maximum
-            logger.warning(f"Timeout fetching content from {url}")
-            return ""
-            
-        # Skip complex parsing and use a simpler, safer approach
-        logger.info(f"Using simplified text extraction from {url}")
         
-        text = None
+        # Extraemos el contenido con límite de tamaño
         try:
-            # Limit HTML size to prevent memory issues (1MB max)
-            html_content = response.text[:1024*1024] if len(response.text) > 1024*1024 else response.text
+            # Limit HTML size to prevent memory issues (500KB max)
+            content_length = response.headers.get('Content-Length')
+            if content_length and int(content_length) > 500*1024:
+                logger.warning(f"Content too large: {content_length} bytes, truncating to 500KB")
+                html_content = response.raw.read(500*1024).decode('utf-8', errors='ignore')
+            else:
+                html_content = response.text[:500*1024] if len(response.text) > 500*1024 else response.text
             
-            # Very basic HTML to text conversion without BeautifulSoup
-            # This is less accurate but much safer for handling malformed HTML
+            # HTML cleaning process with fallbacks
+            text = ""
+            
+            # First attempt: Remove scripts, styles, and HTML tags
             try:
-                # Remove script and style tags with basic regex
-                html_content = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', ' ', html_content, flags=re.DOTALL)
-                html_content = re.sub(r'<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>', ' ', html_content, flags=re.DOTALL)
+                # Remove script, style and head tags
+                cleaned_html = re.sub(r'<(script|style|head)\b[^<]*(?:(?!</(script|style|head)>)<[^<]*)*</(script|style|head)>', 
+                                    '', html_content, flags=re.IGNORECASE | re.DOTALL)
                 
-                # Remove all HTML tags
-                text = re.sub(r'<[^>]+>', ' ', html_content)
+                # Extract text from specific content elements first (more likely to contain useful text)
+                content_elements = re.findall(r'<(article|main|div id="content"|div class="content").*?</\1>', 
+                                           cleaned_html, re.DOTALL | re.IGNORECASE)
                 
-                # Replace multiple whitespace with single space
-                text = re.sub(r'\s+', ' ', text).strip()
+                if content_elements:
+                    # Process each content element
+                    element_texts = []
+                    for element in content_elements:
+                        # Remove HTML tags and clean up
+                        element_text = re.sub(r'<[^>]+>', ' ', element)
+                        element_text = re.sub(r'\s+', ' ', element_text).strip()
+                        if len(element_text) > 100:  # Only include significant text blocks
+                            element_texts.append(element_text)
+                    
+                    if element_texts:
+                        text = "\n\n".join(element_texts)
                 
-                # Split into paragraphs on double newlines
-                paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
-                
-                # Join paragraphs with double newlines
-                text = '\n\n'.join(paragraphs)
+                # If we didn't get good content from content elements, process whole document
+                if not text or len(text) < 200:
+                    # Remove all HTML tags
+                    text = re.sub(r'<[^>]+>', ' ', cleaned_html)
+                    
+                    # Clean up whitespace
+                    text = re.sub(r'\s+', ' ', text).strip()
+                    
+                    # Split into paragraphs (text blocks separated by multiple spaces)
+                    paragraphs = re.split(r'\s{2,}', text)
+                    paragraphs = [p.strip() for p in paragraphs if len(p.strip()) > 50]
+                    
+                    # Join significant paragraphs
+                    text = "\n\n".join(paragraphs)
             except Exception as regex_error:
-                logger.error(f"Regex processing failed: {str(regex_error)}")
-                # Fallback to even simpler method
-                text = html_content.replace('<', ' ').replace('>', ' ')
-                text = re.sub(r'\s+', ' ', text).strip()
+                logger.error(f"Primary HTML processing failed: {str(regex_error)}")
+                # Fallback to very basic extraction
+                try:
+                    # Strip HTML tags brutally
+                    text = re.sub(r'<[^>]*>', ' ', html_content)
+                    text = re.sub(r'\s+', ' ', text).strip()
+                except Exception as e:
+                    logger.error(f"Even basic HTML processing failed: {str(e)}")
+                    # Ultimate fallback - just remove brackets
+                    text = html_content.replace('<', ' ').replace('>', ' ')
+                    text = re.sub(r'\s+', ' ', text).strip()
+            
+            # Verify we have meaningful content
+            if not text or len(text.strip()) < 100:
+                logger.warning(f"Failed to extract meaningful text from {url}")
+                return ""
+            
+            # Limit final text length
+            if len(text) > 50000:
+                logger.info(f"Limiting extracted text to 50000 chars (was {len(text)})")
+                text = text[:50000]
+                
+            logger.info(f"Successfully extracted {len(text)} characters from {url}")
+            return text
+            
         except Exception as e:
             logger.error(f"Text extraction failed: {str(e)}")
             return ""
-        
-        if not text or len(text.strip()) < 50:
-            logger.warning(f"Failed to extract meaningful text from {url}")
-            return ""
             
-        logger.info(f"Successfully extracted {len(text)} characters from {url}")
-        return text
     except requests.exceptions.Timeout:
         logger.warning(f"Request timeout for {url}")
         return ""
