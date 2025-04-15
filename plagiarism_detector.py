@@ -28,138 +28,183 @@ logger = logging.getLogger(__name__)
 
 def search_online(query, num_results=5):
     """
-    Search for the query text online using SerpAPI.
+    Search for the query text online using SerpAPI or DuckDuckGo as fallback.
+    This function tries multiple search APIs to ensure we always get results.
     """
     try:
-        # No special cases - simple search only
-        special_results = []
-        wiki_added = False
-        
-        # Get API key from environment variable
+        # Try SerpAPI first (if API key is available)
         api_key = os.environ.get("SERPAPI_KEY")
-        if not api_key:
-            logger.warning("No SERPAPI_KEY found in environment variables. Using limited search functionality.")
-            # Include special results if any
-            if special_results:
-                return special_results
-            # Otherwise return dummy results
-            return [
-                {"title": "No search API key provided", "link": "#", "snippet": "Add SERPAPI_KEY to environment variables for real search results."}
-            ]
+        if api_key:
+            try:
+                logger.info(f"Trying SerpAPI search for query: {query[:50]}...")
+                # Make request to SerpAPI
+                params = {
+                    "q": query,
+                    "api_key": api_key,
+                    "num": num_results,
+                    "gl": "us",  # Set to US for more reliable results
+                    "hl": "en"   # Set to English
+                }
+                
+                response = requests.get("https://serpapi.com/search", params=params, timeout=15)
+                
+                # If we hit rate limit, skip to DuckDuckGo
+                if response.status_code == 429:
+                    logger.warning("SerpAPI rate limit reached, falling back to DuckDuckGo")
+                else:
+                    response.raise_for_status()
+                    
+                    # Parse and validate response
+                    response_data = response.json()
+                    
+                    if "error" not in response_data:
+                        # Get organic results, handling different response formats
+                        search_results = response_data.get("organic_results", [])
+                        
+                        if search_results:
+                            logger.info(f"Found {len(search_results)} results from SerpAPI")
+                            
+                            # Process and validate each result
+                            processed_results = []
+                            existing_urls = set()
+                            
+                            for result in search_results:
+                                if not isinstance(result, dict):
+                                    continue
+                                    
+                                title = result.get("title", "")
+                                link = result.get("link", "")
+                                snippet = result.get("snippet", "")
+                                
+                                # Validate link
+                                if not isinstance(link, str) or not link or link == "#":
+                                    continue
+                                
+                                # Skip duplicates
+                                if link in existing_urls:
+                                    continue
+                                
+                                existing_urls.add(link)
+                                processed_results.append({
+                                    "title": title if isinstance(title, str) else "",
+                                    "link": link,
+                                    "snippet": snippet if isinstance(snippet, str) else ""
+                                })
+                            
+                            if processed_results:
+                                return processed_results
+            
+            except Exception as e:
+                logger.warning(f"SerpAPI search failed: {str(e)}")
+                # Fall through to next method
         
-        # Make request to SerpAPI
-        params = {
-            "q": query,
-            "api_key": api_key,
-            "num": num_results,
-            "gl": "us",  # Set to US for more reliable results
-            "hl": "en"   # Set to English
-        }
-        
+        # Try DuckDuckGo search (always free, no API key needed)
         try:
-            logger.info(f"Sending search request for query: {query[:30]}...")
-            response = requests.get("https://serpapi.com/search", params=params, timeout=15)
+            logger.info(f"Trying DuckDuckGo search for query: {query[:50]}...")
+            
+            # URL-encode the query
+            encoded_query = query.replace(' ', '+')
+            
+            # DuckDuckGo Instant Answer API
+            url = f"https://api.duckduckgo.com/?q={encoded_query}&format=json"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
-            # Parse and validate response
-            response_data = response.json()
+            ddg_data = response.json()
             
-            if "error" in response_data:
-                logger.error(f"SerpAPI returned error: {response_data['error']}")
-                # Return special results if available, or error message
-                if special_results:
-                    return special_results
-                return [{"title": "Search API Error", "link": "#", "snippet": f"Error: {response_data['error']}"}]
-                
-            # Get organic results, handling different response formats
-            search_results = response_data.get("organic_results", [])
+            results = []
             
-            if not search_results and "error" not in response_data:
-                logger.warning(f"No organic results found in SerpAPI response, keys: {list(response_data.keys())}")
-                
-                # Try alternative key that might be used
-                search_results = response_data.get("results", [])
-                
-                # If still no results, check for other possible containers
-                if not search_results:
-                    search_results = response_data.get("search_results", [])
-                
-            logger.info(f"Found {len(search_results)} search results")
-            
-            # Process and validate each result
-            processed_results = []
-            
-            # First add any special results
-            processed_results.extend(special_results)
-            
-            # Track URLs to avoid duplicates (e.g., if we've added Wikipedia manually)
-            existing_urls = {result["link"] for result in special_results}
-            
-            for result in search_results:
-                if not isinstance(result, dict):
-                    logger.warning(f"Skipping non-dictionary result: {result}")
-                    continue
-                    
-                title = result.get("title", "")
-                link = result.get("link", "")
-                snippet = result.get("snippet", "")
-                
-                # Validate link - must be a string and a valid URL
-                if not isinstance(link, str) or not link or link == "#":
-                    logger.warning(f"Skipping result with invalid link: {link}")
-                    continue
-                
-                # Skip if we already have this URL
-                if link in existing_urls:
-                    logger.info(f"Skipping duplicate URL: {link}")
-                    continue
-                
-                existing_urls.add(link)
-                processed_results.append({
-                    "title": title if isinstance(title, str) else "",
-                    "link": link,
-                    "snippet": snippet if isinstance(snippet, str) else ""
+            # Process the abstract (main answer)
+            if ddg_data.get('AbstractURL') and ddg_data.get('Abstract'):
+                results.append({
+                    'title': ddg_data.get('Heading', 'DuckDuckGo Result'),
+                    'link': ddg_data['AbstractURL'],
+                    'snippet': ddg_data['Abstract']
                 })
-                
-            # No special cases for specific queries
-                
-            return processed_results
             
-        except ValueError as e:
-            logger.error(f"Error parsing JSON from SerpAPI: {str(e)}")
-            # Return special results if available, or error message
-            if special_results:
-                return special_results
-            return [{"title": "JSON Parsing Error", "link": "#", "snippet": f"Error: {str(e)}"}]
+            # Process related topics
+            if 'RelatedTopics' in ddg_data:
+                for topic in ddg_data['RelatedTopics']:
+                    if len(results) >= num_results:
+                        break
+                    
+                    if 'FirstURL' in topic and 'Text' in topic:
+                        # Extract title from the URL
+                        url_path = topic['FirstURL'].split('/')[-1].replace('_', ' ')
+                        title = topic.get('Name', url_path)
+                        
+                        results.append({
+                            'title': title,
+                            'link': topic['FirstURL'],
+                            'snippet': topic['Text']
+                        })
+            
+            # If we have results, return them
+            if results:
+                logger.info(f"Found {len(results)} results from DuckDuckGo")
+                return results
+                
+        except Exception as e:
+            logger.warning(f"DuckDuckGo search failed: {str(e)}")
+            # Fall through to next method
         
-        except requests.RequestException as e:
-            error_message = str(e)
-            logger.error(f"HTTP error from SerpAPI: {error_message}")
+        # Try Wikipedia API search as a last resort
+        try:
+            logger.info(f"Trying Wikipedia search for query: {query[:50]}...")
             
-            # Check specifically for rate limit errors (429 Too Many Requests)
-            if "429" in error_message:
-                logger.warning("Rate limit exceeded for SerpAPI. Using previously found results or informing user.")
-                # Return a more user-friendly message for rate limits
-                if special_results:
-                    return special_results
-                return [{"title": "Search API Rate Limit Reached", 
-                       "link": "#", 
-                       "snippet": "The search service is temporarily unavailable due to rate limiting. Please try again in a few minutes or with a different search term."}]
+            encoded_query = query.replace(' ', '+')
+            url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={encoded_query}&limit={num_results}&namespace=0&format=json"
             
-            # Handle other HTTP errors
-            if special_results:
-                return special_results
-            return [{"title": "Search API HTTP Error", "link": "#", "snippet": f"Error: {error_message}"}]
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            
+            # Wikipedia opensearch returns [query, [titles], [descriptions], [urls]]
+            wiki_data = response.json()
+            
+            if len(wiki_data) >= 4:
+                titles = wiki_data[1]
+                descriptions = wiki_data[2]
+                urls = wiki_data[3]
+                
+                results = []
+                for i in range(min(len(titles), len(urls))):
+                    description = descriptions[i] if i < len(descriptions) else ""
+                    results.append({
+                        'title': titles[i],
+                        'link': urls[i],
+                        'snippet': description
+                    })
+                
+                if results:
+                    logger.info(f"Found {len(results)} results from Wikipedia")
+                    return results
+        
+        except Exception as e:
+            logger.warning(f"Wikipedia search failed: {str(e)}")
+            # Fall through to fallback
+        
+        # Fallback results if all search methods fail
+        logger.warning("All search methods failed. Providing fallback results.")
+        return [
+            {"title": "Search temporarily unavailable", 
+             "link": "https://en.wikipedia.org/wiki/" + query.replace(' ', '_'),
+             "snippet": "External search services are currently unavailable. Try again later or with different search terms."}
+        ]
     
     except Exception as e:
         logger.error(f"Unexpected error in search_online: {str(e)}")
-        # Initialize special_results if not already defined
-        special_results = []
-        
-        # No special handling for specific queries
-        
-        # Return generic error message
-        return [{"title": "Search Error", "link": "#", "snippet": f"Error: {str(e)}"}]
+        return [{"title": "Search Error", 
+                 "link": "https://en.wikipedia.org/wiki/Main_Page",
+                 "snippet": f"Error during search: {str(e)}"}]
 
 def preprocess_text(text):
     """Preprocess text for comparison."""
