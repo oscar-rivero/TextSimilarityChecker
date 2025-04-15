@@ -6,6 +6,9 @@ import time
 import os
 import hashlib
 import random
+from bs4 import BeautifulSoup
+import nltk
+from nltk.tokenize import sent_tokenize
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +155,7 @@ def get_mock_content(url):
 def get_website_text_content(url: str) -> str:
     """
     This function takes a url and returns the main text content of the website.
-    The text content is extracted using trafilatura and easier to understand.
+    The text content is extracted using trafilatura which handles proper text extraction.
     In safe mode, it returns mock content to prevent errors.
     """
     # Check if URL is valid first
@@ -166,25 +169,54 @@ def get_website_text_content(url: str) -> str:
         return get_mock_content(url)
     
     try:
-        # Simple approach without custom config - trafilatura handles user agent and timeouts internally
+        logger.info(f"Fetching real content from {url}")
+        # Configure trafilatura for better extraction
         start_time = time.time()
-        downloaded = trafilatura.fetch_url(url)
+        
+        # Set custom headers to simulate a real browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        # Use requests for more control over the request
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()  # Raise an exception for HTTP errors
         
         # If it takes too long, bail out
         if time.time() - start_time > 15:  # 15 seconds maximum
             logger.warning(f"Timeout fetching content from {url}")
             return ""
             
-        if not downloaded:
-            logger.warning(f"Failed to download content from {url}")
-            return ""
-            
-        text = trafilatura.extract(downloaded)
+        # Use trafilatura to extract the text from the HTML
+        text = trafilatura.extract(response.text)
         
-        if not text:
-            logger.warning(f"Failed to extract text from {url}")
+        if not text or len(text.strip()) < 50:
+            # Fallback to BeautifulSoup if trafilatura fails to extract content
+            logger.info(f"Trafilatura failed to extract content, using BeautifulSoup as fallback for {url}")
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Remove script and style elements
+            for script_or_style in soup(["script", "style"]):
+                script_or_style.decompose()
+                
+            # Get the text content
+            text = soup.get_text(separator='\n\n')
+            
+            # Clean the text (remove extra whitespace, etc.)
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            text = '\n\n'.join(lines)
+        
+        if not text or len(text.strip()) < 50:
+            logger.warning(f"Failed to extract meaningful text from {url}")
             return ""
             
+        logger.info(f"Successfully extracted {len(text)} characters from {url}")
         return text
     except requests.exceptions.Timeout:
         logger.warning(f"Request timeout for {url}")

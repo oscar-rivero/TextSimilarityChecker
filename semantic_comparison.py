@@ -620,10 +620,25 @@ def find_best_matching_paragraph(input_text, source_text):
     - Dictionary with the best matching paragraph and its similarity score
     """
     try:
+        logger.info(f"Finding best matching paragraph from source text of length {len(source_text)}")
+        
+        # First check if source_text appears to be HTML
+        is_html = False
+        if source_text and ('<html' in source_text.lower() or 
+                           '<body' in source_text.lower() or 
+                           '<div' in source_text.lower() or
+                           '<p>' in source_text.lower()):
+            is_html = True
+            logger.info("Source text appears to be HTML")
+        
         # Extract paragraphs from source
         paragraphs = extract_paragraphs_from_source(source_text)
         
+        # Log information about extracted paragraphs
+        logger.info(f"Extracted {len(paragraphs)} paragraphs from source text")
+        
         if not paragraphs:
+            logger.warning("No paragraphs found in source text")
             return {
                 'paragraph': '',
                 'similarity': 0
@@ -631,17 +646,50 @@ def find_best_matching_paragraph(input_text, source_text):
         
         # Calculate cosine similarity for each paragraph
         similarities = []
-        for paragraph in paragraphs:
+        for i, paragraph in enumerate(paragraphs):
+            if len(paragraph) < 50:  # Skip very short paragraphs
+                continue
+                
             similarity = calculate_cosine_similarity(input_text, paragraph)
+            
+            # Log paragraph and similarity for debugging
+            logger.debug(f"Paragraph {i} (length {len(paragraph)}) has similarity {similarity}")
+            
             similarities.append({
                 'paragraph': paragraph,
                 'similarity': similarity
             })
         
+        # Sort by similarity in descending order
+        sorted_similarities = sorted(similarities, key=lambda x: x['similarity'], reverse=True)
+        
         # Return the paragraph with the highest similarity
-        if similarities:
-            return max(similarities, key=lambda x: x['similarity'])
+        if sorted_similarities:
+            best_match = sorted_similarities[0]
+            logger.info(f"Best matching paragraph has similarity {best_match['similarity']}")
+            
+            # If similarity is very low, check if we might need to do more processing
+            if best_match['similarity'] < 0.1 and len(sorted_similarities) > 1:
+                logger.warning("Low similarity score, checking for better matches with combined paragraphs")
+                
+                # Try combining adjacent paragraphs
+                combined_paragraphs = []
+                for i in range(len(paragraphs) - 1):
+                    combined = paragraphs[i] + " " + paragraphs[i+1]
+                    similarity = calculate_cosine_similarity(input_text, combined)
+                    combined_paragraphs.append({
+                        'paragraph': combined,
+                        'similarity': similarity
+                    })
+                
+                # If we found a better match with combined paragraphs, use it
+                if combined_paragraphs and max(combined_paragraphs, key=lambda x: x['similarity'])['similarity'] > best_match['similarity']:
+                    best_match = max(combined_paragraphs, key=lambda x: x['similarity'])
+                    logger.info(f"Found better match with combined paragraphs, similarity: {best_match['similarity']}")
+            
+            return best_match
         else:
+            logger.warning("No valid paragraphs with similarities found")
             return {
                 'paragraph': '',
                 'similarity': 0
