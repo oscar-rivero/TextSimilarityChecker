@@ -541,12 +541,13 @@ def check_plagiarism(text):
                             },
                             "similarity": similarity_percent,
                             "matches": matches,
-                            "semantic_matches": [],  # Will be filled later
+                            "semantic_matches": [],  # Empty array as requested by user - semantic matches removed
                             "source_content": source_content,  # Store content for classification later
                             "best_paragraph": {
                                 "content": best_paragraph_match['paragraph'],
                                 "similarity": best_paragraph_match['similarity'] * 100  # Convert to percentage like other similarity scores
-                            }
+                            },
+                            "relevance_score": 0  # Will be calculated later
                         })
                 except ValueError as e:
                     logger.error(f"Value error processing source {source_url}: {str(e)}")
