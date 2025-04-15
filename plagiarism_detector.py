@@ -131,26 +131,41 @@ def search_online(query, num_results=5):
             except Exception as e:
                 logger.warning(f"Wikipedia search failed: {str(e)}")
         
-        # Step 3: If we still don't have results, add fallback Wikipedia search link
+        # Step 3: If we still don't have results, add fallback links to real search services
         if not results:
-            # Create a direct Wikipedia search link for the query
-            wiki_query = query.replace(' ', '_')
+            # Extract key terms (first 3-4 words) for better search results
+            short_query = ' '.join(query.split()[:4]) if len(query.split()) > 4 else query
+            
+            # Add Wikipedia search page (not wiki article)
+            wiki_search_query = short_query.replace(' ', '+')
             results.append({
-                "title": f"Wikipedia: {query}",
-                "link": f"https://en.wikipedia.org/wiki/{wiki_query}",
-                "snippet": f"Search results for {query} on Wikipedia."
+                "title": f"Wikipedia Search: {short_query}",
+                "link": f"https://en.wikipedia.org/w/index.php?search={wiki_search_query}",
+                "snippet": f"Search results for '{short_query}' on Wikipedia."
             })
             
-            logger.warning("No search results found. Using fallback Wikipedia link.")
+            # Add DuckDuckGo search page
+            ddg_search_query = short_query.replace(' ', '+')
+            results.append({
+                "title": f"DuckDuckGo Search: {short_query}",
+                "link": f"https://duckduckgo.com/?q={ddg_search_query}",
+                "snippet": f"Search results for '{short_query}' on DuckDuckGo."
+            })
+            
+            logger.warning("No direct search results found. Using search engine links.")
         
         return results
         
     except Exception as e:
         logger.error(f"Unexpected error in search_online: {str(e)}")
+        # Extract the first few words of the query for a more focused search link
+        short_query = ' '.join(query.split()[:4]) if len(query.split()) > 4 else query
+        search_query = short_query.replace(' ', '+')
+        
         return [{
-            "title": "Search Error",
-            "link": "https://en.wikipedia.org/wiki/Main_Page",
-            "snippet": f"Error during search: {str(e)}"
+            "title": "Search Error - Try Google",
+            "link": f"https://www.google.com/search?q={search_query}",
+            "snippet": f"Error occurred during search. Try this Google search link for '{short_query}'."
         }]
 
 def preprocess_text(text):
