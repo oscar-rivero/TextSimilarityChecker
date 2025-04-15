@@ -34,10 +34,38 @@ def check(request):
         
         # Perform plagiarism check
         logger.debug(f"Checking plagiarism for text of length: {len(text)}")
+        
+        # Verificar si la sesión está inicializada correctamente
+        if not request.session.session_key:
+            request.session.create()
+            logger.debug("Creando nueva sesión para el usuario")
+            
         results = check_plagiarism(text)
         
+        # Convertir resultados a JSON serializable para evitar errores de sesión
+        # Esto soluciona el problema con AnonymousUser
+        serializable_results = []
+        for result in results:
+            # Crear copia serializable del resultado
+            serializable_result = {
+                "source": {
+                    "title": result["source"]["title"],
+                    "url": result["source"]["url"],
+                    "snippet": result["source"]["snippet"]
+                },
+                "similarity": result["similarity"],
+                "matches": result["matches"],
+                "category_tag": result.get("category_tag", "General"),
+                "relevance_score": result.get("relevance_score", 0),
+                "best_paragraph": {
+                    "content": result["best_paragraph"]["content"],
+                    "similarity": result["best_paragraph"]["similarity"]
+                }
+            }
+            serializable_results.append(serializable_result)
+        
         # Store results in session for report generation
-        request.session['check_results'] = results
+        request.session['check_results'] = serializable_results
         request.session['original_text'] = text
         
         # Generate report data
