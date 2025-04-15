@@ -176,33 +176,9 @@ def get_website_text_content(url: str) -> str:
     try:
         logger.info(f"Fetching real content from {url}")
         
-        # Intento primero con trafilatura para obtener contenido bien estructurado
-        try:
-            import trafilatura
-            logger.info(f"Using trafilatura to extract content from {url}")
-            
-            # Descarga el contenido con manejo de errores
-            downloaded = None
-            try:
-                downloaded = trafilatura.fetch_url(url)
-            except Exception as fetch_error:
-                logger.error(f"Trafilatura fetch error for {url}: {str(fetch_error)}")
-                # Si falla la descarga, intentamos con requests
-                
-            # Si se descargó correctamente, extraemos el texto
-            if downloaded:
-                try:
-                    # Extracción con trafilatura
-                    extracted_text = trafilatura.extract(downloaded)
-                    if extracted_text and len(extracted_text.strip()) > 100:
-                        logger.info(f"Successfully extracted {len(extracted_text)} characters from {url} with trafilatura")
-                        return extracted_text
-                except Exception as extract_error:
-                    logger.error(f"Trafilatura extraction error: {str(extract_error)}")
-                    # Continuamos con el método alternativo
-        except ImportError:
-            logger.warning("Trafilatura no disponible, usando método alternativo")
-            # Continuamos con el método alternativo si no está disponible trafilatura
+        # Desactivamos temporalmente trafilatura debido a problemas
+        # y usamos directamente nuestro método alternativo más robusto
+        logger.info(f"Using robust alternative method for {url}")
         
         # Método alternativo con requests y procesamiento básico
         # Set custom headers to simulate a real browser
@@ -244,8 +220,12 @@ def get_website_text_content(url: str) -> str:
                                     '', html_content, flags=re.IGNORECASE | re.DOTALL)
                 
                 # Extract text from specific content elements first (more likely to contain useful text)
-                content_elements = re.findall(r'<(article|main|div id="content"|div class="content").*?</\1>', 
-                                           cleaned_html, re.DOTALL | re.IGNORECASE)
+                try:
+                    content_elements = re.findall(r'<(article|main|div id="content"|div class="content").*?</\1>', 
+                                              cleaned_html, re.DOTALL | re.IGNORECASE)
+                except Exception as element_error:
+                    logger.error(f"Error finding content elements: {str(element_error)}")
+                    content_elements = []
                 
                 if content_elements:
                     # Process each content element
