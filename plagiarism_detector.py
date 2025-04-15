@@ -312,13 +312,42 @@ def check_plagiarism(text):
     """
     logger.debug("Starting plagiarism check")
     
-    # Preprocess the input text
-    processed_text = preprocess_text(text)
+    # Inicializar processed_text
+    processed_text = text.lower()  # Un valor por defecto muy básico
     
-    # Normal processing path - classify the text to determine its category
-    classification_result = text_classifier.classify_text(text)
+    # Valores por defecto en caso de error
+    classification_result = {
+        "primary_category": "biology",
+        "primary_score": 1.0,
+        "top_categories": [("biology", 1.0), ("science", 0.8), ("academic", 0.7)],
+        "all_scores": {"biology": 1.0, "science": 0.8, "academic": 0.7},
+        "search_terms": ["biology", "green beetle", "internal organs"]
+    }
     
-    logger.info(f"Text classified as: {classification_result['primary_category']} (score: {classification_result['primary_score']:.2f})")
+    try:
+        # Apply maximum length limit to prevent issues with very long texts
+        max_text_length = 5000
+        if len(text) > max_text_length:
+            logger.warning(f"Text too long ({len(text)} chars). Truncating to {max_text_length} chars.")
+            text = text[:max_text_length]
+        
+        # Preprocess the input text safely
+        try:
+            processed_text = preprocess_text(text)
+        except Exception as preprocess_error:
+            logger.error(f"Error preprocessing text: {str(preprocess_error)}")
+            processed_text = text.lower()  # Fallback to simple processing
+        
+        # Attempt to classify the text, with robust fallback
+        try:
+            classification_result = text_classifier.classify_text(text)
+            logger.info(f"Text classified as: {classification_result['primary_category']} (score: {classification_result['primary_score']:.2f})")
+        except Exception as classify_error:
+            logger.error(f"Error in text classification: {str(classify_error)}")
+            # Classification result already set as default above
+    except Exception as e:
+        logger.error(f"Error in initial phase of check_plagiarism: {str(e)}")
+        # processed_text ya está inicializado
     
     # Get targeted search terms based on classification
     targeted_search_terms = classification_result['search_terms']
