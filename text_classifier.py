@@ -165,18 +165,40 @@ CATEGORY_KEYWORDS = {
 
 def extract_features(text):
     """Extract key features from the text for classification."""
-    # Convert to lowercase
-    text = text.lower()
-    
-    # Remove special characters and numbers
-    text = re.sub(r'[^a-z\s]', '', text)
-    
-    # Tokenize
-    tokens = word_tokenize(text)
-    
-    # Remove stopwords
-    stop_words = set(stopwords.words('english'))
-    tokens = [word for word in tokens if word not in stop_words and len(word) > 2]
+    try:
+        # Verificamos que tengamos texto válido
+        if not text or not isinstance(text, str):
+            logger.warning("Extract features received invalid input: not a string or empty")
+            return {"tokens": [], "word_freq": {}, "text": ""}
+        
+        # Convert to lowercase
+        text = text.lower()
+        
+        # Remove special characters and numbers
+        text = re.sub(r'[^a-z\s]', '', text)
+        
+        # Tokenize con manejo de errores
+        try:
+            tokens = word_tokenize(text)
+        except Exception as e:
+            logger.error(f"Error in tokenization: {str(e)}")
+            # Fallback a un tokenizador simple
+            tokens = text.split()
+        
+        # Remove stopwords con verificación
+        try:
+            stop_words = set(stopwords.words('english'))
+        except Exception as e:
+            logger.error(f"Error loading stopwords: {str(e)}")
+            # Stopwords básicas como fallback
+            stop_words = {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'with', 'by'}
+            
+        # Filtramos asegurando que todos sean strings
+        tokens = [word for word in tokens if isinstance(word, str) and 
+                  word not in stop_words and len(word) > 2]
+    except Exception as e:
+        logger.error(f"Error in extract_features: {str(e)}")
+        return {"tokens": [], "word_freq": {}, "named_entities": []}
     
     # Get word frequency
     word_freq = Counter(tokens)
