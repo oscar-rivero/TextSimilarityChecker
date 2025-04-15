@@ -1,4 +1,3 @@
-import trafilatura
 import logging
 import requests
 from urllib.parse import urlparse
@@ -153,7 +152,7 @@ def get_mock_content(url):
 def get_website_text_content(url: str) -> str:
     """
     This function takes a url and returns the main text content of the website.
-    The text content is extracted using trafilatura which handles proper text extraction.
+    The text content is extracted using BeautifulSoup for reliable text extraction.
     In safe mode, it returns mock content to prevent errors.
     """
     # Check if URL is valid first
@@ -176,7 +175,7 @@ def get_website_text_content(url: str) -> str:
     
     try:
         logger.info(f"Fetching real content from {url}")
-        # Configure trafilatura for better extraction
+        # Track start time for timeout management
         start_time = time.time()
         
         # Set custom headers to simulate a real browser
@@ -203,33 +202,26 @@ def get_website_text_content(url: str) -> str:
             logger.warning(f"Timeout fetching content from {url}")
             return ""
             
-        # Use trafilatura to extract the text from the HTML
-        try:
-            text = trafilatura.extract(response.text)
-        except Exception as e:
-            logger.warning(f"Trafilatura extraction failed: {str(e)}")
-            text = None
+        # Skip trafilatura and use BeautifulSoup directly to avoid errors
+        logger.info(f"Using BeautifulSoup for HTML extraction from {url}")
         
-        if not text or len(text.strip()) < 50:
-            # Fallback to BeautifulSoup if trafilatura fails to extract content
-            logger.info(f"Trafilatura failed to extract content, using BeautifulSoup as fallback for {url}")
+        text = None
+        try:
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
+            # Remove script and style elements
+            for script_or_style in soup(["script", "style"]):
+                script_or_style.decompose()
                 
-                # Remove script and style elements
-                for script_or_style in soup(["script", "style"]):
-                    script_or_style.decompose()
-                    
-                # Get the text content
-                text = soup.get_text(separator='\n\n')
-                
-                # Clean the text (remove extra whitespace, etc.)
-                lines = [line.strip() for line in text.splitlines() if line.strip()]
-                text = '\n\n'.join(lines)
-            except Exception as e:
-                logger.error(f"BeautifulSoup fallback failed: {str(e)}")
-                return ""
+            # Get the text content
+            text = soup.get_text(separator='\n\n')
+            
+            # Clean the text (remove extra whitespace, etc.)
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            text = '\n\n'.join(lines)
+        except Exception as e:
+            logger.error(f"BeautifulSoup extraction failed: {str(e)}")
+            return ""
         
         if not text or len(text.strip()) < 50:
             logger.warning(f"Failed to extract meaningful text from {url}")
